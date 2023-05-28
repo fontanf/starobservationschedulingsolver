@@ -13,11 +13,14 @@ This is the most fundamental variant of the problem. It consists in selecting a 
 Problem description:
 * Input:
   * `n` targets with profit `wⱼ`, time-window `[rⱼ, dⱼ]` and duration `pⱼ` such that `2 pⱼ ≥ dⱼ - rⱼ` (`j = 1..n`)
-* Problem: select a list of targets and their starting dates sⱼ such that:
+* Problem: select a list of targets and their starting dates `sⱼ` such that:
   * A target is observed at most once
   * Observations do not overlap
   * Starting dates satisfy the time-windows, i.e. `rⱼ <= sⱼ` and `sⱼ + pⱼ <= dⱼ`
 * Objective: maximize the overall profit of the selected targets
+
+Implemented algorithms:
+* Dynamic programming `-a dynamic_programming`
 
 ## Star observation scheduling problem
 
@@ -31,8 +34,63 @@ Problem description:
   * `m` nights
   * `n` targets; for each target `j = 1..n`, a profit `wⱼ`
   * A list of possible observations. An observation is associated to a night `i` and a target `j` and has a time-window `[rᵢⱼ, dᵢⱼ]` and a duration `pᵢⱼ` such that `2 pⱼᵢ ≥ dⱼᵢ - rⱼᵢ`
-* Problem: select a list of observations and their starting dates sᵢⱼ such that:
+* Problem: select a list of observations and their starting dates `sᵢⱼ` such that:
   * A target is observed at most once
   * Observations do not overlap
   * Starting dates satisfy the time-windows, i.e. `rᵢⱼ <= sᵢⱼ` and `sᵢⱼ + pᵢⱼ <= dᵢⱼ`
 * Objective: maximize the overall profit of the selected observations
+
+Implemented algorithms:
+* Column generation heuristic `-a column_generation_greedy`
+
+## Usage (command line)
+
+Compile:
+```shell
+bazel build -- //...
+```
+
+Examples:
+
+```shell
+./bazel-bin/starobservationschedulingsolver/main -v 1 -i ./data/starobservationscheduling/catusse2016/real.txt -a column_generation
+```
+```
+======================================
+  Star observation scheduling solver  
+======================================
+
+Instance
+--------
+Number of nights:       142
+Number of targets:      800
+Number of observables:  42929
+
+Algorithm
+---------
+Column Generation Heuristic - Greedy
+
+Parameters
+----------
+Linear programming solver:  CLP
+
+       T (s)              LB              UB             GAP     GAP (%)                 Comment
+       -----              --              --             ---     -------                 -------
+       0.000               0           20000           20000      100.00                        
+     117.133               0           18620           18620      100.00                        
+     117.133           18620           18620               0        0.00                        
+
+Final statistics
+----------------
+Value:                        18620
+Bound:                        18620
+Absolute optimality gap:      0
+Relative optimality gap (%):  0
+Time (s):                     117.133
+
+Solution
+--------
+Number of targets:  702 / 800 (87.75%)
+Feasible:           1
+Profit:             18620 / 20000 (93.1%)
+```

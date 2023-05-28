@@ -1,0 +1,5 @@
+build --compilation_mode=opt
+#build --cxxopt=-Wall --cxxopt=-Wextra
+
+build --define clp=true
+#build --define cplex=true

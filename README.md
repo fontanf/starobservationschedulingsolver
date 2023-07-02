@@ -6,6 +6,8 @@ A solver for star observation scheduling problems.
 
 [image source](https://commons.wikimedia.org/wiki/File:Paranal_and_the_Pacific_at_sunset_(dsc4088,_retouched,_cropped).jpg)
 
+![scheduleexample](img/schedule_example.png?raw=true "Schedule example")
+
 ## Single-night star observation scheduling problem
 
 This is the most fundamental variant of the problem. It consists in selecting a subset of targets to observe during a given night.
@@ -53,7 +55,7 @@ bazel build -- //...
 Examples:
 
 ```shell
-./bazel-bin/starobservationschedulingsolver/main -v 1 -i ./data/starobservationscheduling/catusse2016/real.txt -a column_generation
+./bazel-bin/starobservationschedulingsolver/main -v 1 -i ./data/starobservationscheduling/catusse2016/real.txt -a column_generation -c solution.txt
 ```
 ```
 ======================================
@@ -94,3 +96,9 @@ Number of targets:  702 / 800 (87.75%)
 Feasible:           1
 Profit:             18620 / 20000 (93.1%)
 ```
+
+Visualize:
+```
+python3 starobservationschedulingsolver/visualizer.py solution.txt
+```
+

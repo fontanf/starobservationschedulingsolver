@@ -103,14 +103,18 @@ void Solution::write(std::string certificate_path) const
                 "Unable to open file \"" + certificate_path + "\".");
     }
 
+    file << instance().number_of_nights() << std::endl;
     for (NightId night_id = 0;
             night_id < instance().number_of_nights();
             ++night_id) {
         const SolutionNight& night = this->night(night_id);
         file << night.observations.size() << std::endl;
         for (const auto& observation: night.observations)
-            file << " " << observation.observable_id;
-        file << std::endl;
+            file << observation.observable_id
+                << " " << instance().observable(night_id, observation.observable_id).target_id
+                << " " << observation.start_time
+                << " " << observation.start_time + instance().observable(night_id, observation.observable_id).observation_time
+                << std::endl;;
     }
 }
 

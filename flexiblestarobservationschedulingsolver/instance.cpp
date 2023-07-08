@@ -1,40 +1,45 @@
-#include "starobservationschedulingsolver/instance.hpp"
+#include "flexiblestarobservationschedulingsolver/instance.hpp"
 
 #include "optimizationtools/utils/utils.hpp"
 #include "optimizationtools/containers/indexed_set.hpp"
+#include "optimizationtools/containers/indexed_map.hpp"
 
 #include <fstream>
 #include <iostream>
 #include <iomanip>
 
-using namespace starobservationschedulingsolver;
+using namespace flexiblestarobservationschedulingsolver;
 
-void Instance::add_observable(
+ObservableId Instance::add_observable(
         NightId night_id,
         TargetId target_id,
         Time release_date,
         Time meridian,
-        Time deadline,
-        Time observation_time)
+        Time deadline)
 {
     Observable observable;
     observable.target_id = target_id;
     observable.release_date = release_date;
     observable.meridian = meridian;
     observable.deadline = deadline;
-    observable.observation_time = observation_time;
     observables_[night_id].push_back(observable);
 
     number_of_observables_++;
+    return observables_[night_id].size() - 1;
 }
 
-void Instance::set_profit(
-        TargetId target_id,
+void Instance::add_observation_time(
+        NightId night_id,
+        ObservableId observable_id,
+        Time observation_time,
         Profit profit)
 {
-    profit_sum_ -= profits_[target_id];
-    profits_[target_id] = profit;
-    profit_sum_ += profits_[target_id];
+    observables_[night_id][observable_id].observation_times.push_back(observation_time);
+    observables_[night_id][observable_id].profits.push_back(profit);
+    observables_[night_id][observable_id].maximum_profit = std::max(
+                observables_[night_id][observable_id].maximum_profit,
+                profit);
+    profit_sum_ += profit;
 }
 
 Instance::Instance(
@@ -44,7 +49,7 @@ Instance::Instance(
     std::ifstream file(instance_path);
     if (!file.good()) {
         throw std::runtime_error(
-                "starobservationschedulingsolver::Instance::Instance\n"
+                "flexiblestarobservationschedulingsolver::Instance::Instance\n"
                 "Unable to open file \"" + instance_path + "\".");
     }
 
@@ -59,9 +64,9 @@ Instance::Instance(
     file.close();
 }
 
-void Instance::read_catusse2016(std::ifstream& file)
+void Instance::read_catusse2016(
+        std::ifstream& file)
 {
-    TargetId number_of_targets;
     NightId number_of_nights;
     std::string null;
     std::string line;
@@ -73,21 +78,22 @@ void Instance::read_catusse2016(std::ifstream& file)
 
     std::getline(file, line);
     std::istringstream iss_n(line);
-    iss_n >> null >> null >> number_of_targets;
-    profits_ = std::vector<Profit>(number_of_targets);
+    iss_n >> null >> null >> number_of_targets_;
 
-    Profit profit = -1;
+    std::vector<Time> observation_times;
+    std::vector<Profit> profits;
+    Counter number_of_observation_times = -1;
     Time observation_time = -1;
+    Profit profit = -1;
     Time release_date = -1;
     Time meridian = -1;
     Time deadline = -1;
     for (TargetId target_id = 0;
-            target_id < number_of_targets;
+            target_id < number_of_targets();
             ++target_id) {
         std::getline(file, line);
         std::istringstream iss(line);
-        iss >> null >> null >> null >> null >> profit;
-        set_profit(target_id, profit);
+        iss >> null >> null;
 
         for (NightId night_id = 0;
                 night_id < number_of_nights;
@@ -97,17 +103,34 @@ void Instance::read_catusse2016(std::ifstream& file)
             iss >> null >> null >> null;
             if (iss.eof())
                 continue;
-            iss >> observation_time
-                >> null >> release_date
+            observation_times.clear();
+            profits.clear();
+            iss >> number_of_observation_times;
+            for (Counter observation_time_pos = 0;
+                    observation_time_pos < number_of_observation_times;
+                    ++observation_time_pos) {
+                iss >> observation_time >> profit;
+                observation_times.push_back(observation_time);
+                profits.push_back(profit);
+            }
+            iss >> null >> release_date
                 >> null >> meridian
                 >> null >> deadline;
-            add_observable(
+            ObservableId observable_id = add_observable(
                     night_id,
                     target_id,
                     release_date,
                     meridian,
-                    deadline,
-                    observation_time);
+                    deadline);
+            for (Counter observation_time_pos = 0;
+                    observation_time_pos < number_of_observation_times;
+                    ++observation_time_pos) {
+                add_observation_time(
+                        night_id,
+                        observable_id,
+                        observation_times[observation_time_pos],
+                        profits[observation_time_pos]);
+            }
         }
     }
 }
@@ -126,28 +149,9 @@ std::ostream& Instance::print(
 
     if (verbose >= 2) {
         os << std::endl
-            << std::setw(12) << "Target"
-            << std::setw(12) << "Profit"
-            << std::endl
-            << std::setw(12) << "------"
-            << std::setw(12) << "------"
-            << std::endl;
-        for (TargetId target_id = 0;
-                target_id < number_of_targets();
-                ++target_id) {
-            os
-                << std::setw(12) << target_id
-                << std::setw(12) << profit(target_id)
-                << std::endl;
-        }
-    }
-
-    if (verbose >= 2) {
-        os << std::endl
             << std::setw(12) << "Night"
             << std::setw(12) << "Obs"
             << std::setw(12) << "Target"
-            << std::setw(12) << "Obs. time"
             << std::setw(12) << "Rel. date"
             << std::setw(12) << "Meridian"
             << std::setw(12) << "Deadline"
@@ -155,7 +159,6 @@ std::ostream& Instance::print(
             << std::setw(12) << "-----"
             << std::setw(12) << "---"
             << std::setw(12) << "------"
-            << std::setw(12) << "---------"
             << std::setw(12) << "---------"
             << std::setw(12) << "--------"
             << std::setw(12) << "--------"
@@ -171,7 +174,6 @@ std::ostream& Instance::print(
                     << std::setw(12) << night_id
                     << std::setw(12) << observable_id
                     << std::setw(12) << observable.target_id
-                    << std::setw(12) << observable.observation_time
                     << std::setw(12) << observable.release_date
                     << std::setw(12) << observable.meridian
                     << std::setw(12) << observable.deadline
@@ -180,7 +182,100 @@ std::ostream& Instance::print(
         }
     }
 
+    if (verbose >= 3) {
+        os << std::endl
+            << std::setw(12) << "Night"
+            << std::setw(12) << "Obs"
+            << std::setw(12) << "Target"
+            << std::setw(12) << "Obs. time"
+            << std::setw(12) << "Profit"
+            << std::endl
+            << std::setw(12) << "-----"
+            << std::setw(12) << "---"
+            << std::setw(12) << "------"
+            << std::setw(12) << "---------"
+            << std::setw(12) << "------"
+            << std::endl;
+        for (NightId night_id = 0;
+                night_id < number_of_nights();
+                ++night_id) {
+            for (ObservableId observable_id = 0;
+                    observable_id < number_of_observables(night_id);
+                    ++observable_id) {
+                const Observable& observable = this->observable(night_id, observable_id);
+                for (Counter observation_time_pos = 0;
+                        observation_time_pos < (Counter)observable.observation_times.size();
+                        ++observation_time_pos) {
+                    os
+                        << std::setw(12) << night_id
+                        << std::setw(12) << observable_id
+                        << std::setw(12) << observable.target_id
+                        << std::setw(12) << observable.observation_times[observation_time_pos]
+                        << std::setw(12) << observable.profits[observation_time_pos]
+                        << std::endl;
+                }
+            }
+        }
+    }
+
     return os;
+}
+
+void Instance::write(std::string instance_path) const
+{
+    if (instance_path.empty())
+        return;
+    std::ofstream file(instance_path);
+    if (!file.good()) {
+        throw std::runtime_error(
+                "flexiblesinglenightstarobservationschedulingsolver::Instance::write\n"
+                "Unable to open file \"" + instance_path + "\".");
+    }
+
+    std::vector<std::vector<std::pair<NightId, ObservableId>>> target_observables(number_of_targets());
+    for (NightId night_id = 0;
+            night_id < number_of_nights();
+            ++night_id) {
+        for (ObservableId observable_id = 0;
+                observable_id < number_of_observables(night_id);
+                ++observable_id) {
+            const Observable& observable = this->observable(night_id, observable_id);
+            target_observables[observable.target_id].push_back({night_id, observable_id});
+        }
+    }
+
+    file << "Nb nights " << number_of_nights() << std::endl;
+    file << "Nb obs " << number_of_targets() << std::endl;
+    optimizationtools::IndexedMap<ObservableId> night2observable(number_of_nights(), -1);
+    for (TargetId target_id = 0;
+            target_id < number_of_targets();
+            ++target_id) {
+
+        night2observable.clear();
+        for (auto p: target_observables[target_id])
+            night2observable.set(p.first, p.second);
+
+        file << "Obs " << target_id << std::endl;
+        for (NightId night_id = 0;
+                night_id < number_of_nights();
+                ++night_id) {
+            file << "Night " << night_id << ":";
+            if (night2observable.contains(night_id)) {
+                const Observable& observable = this->observable(night_id, night2observable[night_id]);
+                file << " p " << observable.observation_times.size();
+                for (Counter observation_time_pos = 0;
+                        observation_time_pos < (Counter)observable.observation_times.size();
+                        ++observation_time_pos) {
+                    file << " " << observable.observation_times[observation_time_pos]
+                        << " " << observable.profits[observation_time_pos];
+                }
+                file << " r " << observable.release_date
+                    << " m " << observable.meridian
+                    << " d " << observable.deadline;
+            }
+            file << std::endl;
+        }
+    }
 }
 
 std::pair<bool, Profit> Instance::check(
@@ -191,7 +286,7 @@ std::pair<bool, Profit> Instance::check(
     std::ifstream file(certificate_path);
     if (!file.good()) {
         throw std::runtime_error(
-                "starobservationschedulingsolver::Instance::check\n"
+                "flexiblestarobservationschedulingsolver::Instance::check\n"
                 "Unable to open file \"" + certificate_path + "\".");
     }
 
@@ -216,7 +311,6 @@ std::pair<bool, Profit> Instance::check(
     Profit profit = 0;
     TargetId number_of_duplicates = 0;
     TargetId number_of_deadline_violations = 0;
-    std::string tmp;
     for (NightId night_id = 0; night_id < number_of_nights(); ++night_id) {
 
         Time time = 0;
@@ -226,7 +320,8 @@ std::pair<bool, Profit> Instance::check(
                 observable_pos < current_night_number_of_observables;
                 ++observable_pos) {
             ObservableId observable_id;
-            file >> observable_id >> tmp >> tmp >> tmp;
+            Counter observation_time_pos = -1;
+            file >> observable_id >> observation_time_pos;
             const Observable& observable = this->observable(night_id, observable_id);
 
             // Check duplicates.
@@ -241,8 +336,8 @@ std::pair<bool, Profit> Instance::check(
 
             if (time < observable.release_date)
                 time = observable.release_date;
-            time += observable.observation_time;
-            profit += this->profit(observable.target_id);
+            time += observable.observation_times[observation_time_pos];
+            profit += observable.profits[observation_time_pos];
 
             if (verbose >= 2) {
                 os
@@ -285,14 +380,14 @@ std::pair<bool, Profit> Instance::check(
     return {feasible, profit};
 }
 
-void starobservationschedulingsolver::init_display(
+void flexiblestarobservationschedulingsolver::init_display(
         const Instance& instance,
         optimizationtools::Info& info)
 {
     info.os()
-        << "======================================" << std::endl
-        << "  Star observation scheduling solver  " << std::endl
-        << "======================================" << std::endl
+        << "===============================================" << std::endl
+        << "  Flexible star observation scheduling solver  " << std::endl
+        << "===============================================" << std::endl
         << std::endl
         << "Instance" << std::endl
         << "--------" << std::endl;

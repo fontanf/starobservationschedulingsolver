@@ -2,6 +2,8 @@
 
 A solver for star observation scheduling problems.
 
+These are problems I studied during my PhD, which was a collaboration between the [G-SCOP laboratory](https://g-scop.grenoble-inp.fr/en) and the [Institute for Planetary sciences and Astrophysics from Grenoble (IPAG)](https://ipag.osug.fr/?lang=en). The study was motivated by the scheduling problems solved daily by the astrophysicists to schedule their observations on the [Very Large Telescope](https://en.wikipedia.org/wiki/Very_Large_Telescope).
+
 ![verylargetelescope](img/very_large_telescope.jpg?raw=true "Very Large Telescope")
 
 [image source](https://commons.wikimedia.org/wiki/File:Paranal_and_the_Pacific_at_sunset_(dsc4088,_retouched,_cropped).jpg)
@@ -43,7 +45,25 @@ Problem description:
 * Objective: maximize the overall profit of the selected observations
 
 Implemented algorithms:
-* Column generation heuristic `-a column_generation_greedy`
+* Column generation heuristic implemented with [fontanf/columngenerationsolver](https://github.com/fontanf/columngenerationsolver) `-a column_generation`
+
+## Flexible star observation scheduling problems
+
+In these variants, the duration of an observation is flexible. The maximum duration provides the best image quality, but the observation time can be reduced leading to an image of lower quality. It might be worth if then more observations can be scheduled.
+
+For each possible observation, instead of a single observation time and profit, a list of pairs of observation time and profit is given.
+
+### Flexible single-night star observation scheduling problem
+
+Implemented algorithms:
+* Dynamic programming `-a dynamic_programming`
+
+### Flexible star observation scheduling problem
+
+Implemented algorithms:
+* Column generation heuristic implemented with [fontanf/columngenerationsolver](https://github.com/fontanf/columngenerationsolver) `-a column_generation`
+
+![scheduleflexibleexample](img/schedule_flexible_example.png?raw=true "Flexible schedule example")
 
 ## Usage (command line)
 

@@ -7,12 +7,14 @@ using namespace singlenightstarobservationschedulingsolver;
 
 void Instance::add_target(
         Time release_date,
+        Time meridian,
         Time deadline,
         Time observation_time,
         Profit profit)
 {
     Target target;
     target.release_date = release_date;
+    target.meridian = meridian,
     target.deadline = deadline;
     target.observation_time = observation_time;
     target.profit = profit;
@@ -57,6 +59,7 @@ void Instance::read_default(std::ifstream& file)
     Profit profit = -1;
     Time observation_time = -1;
     Time release_date = -1;
+    Time meridian = -1;
     Time deadline = -1;
     for (TargetId target_id = 0;
             target_id < number_of_targets;
@@ -66,9 +69,11 @@ void Instance::read_default(std::ifstream& file)
         iss >> null >> null >> null >> null >> profit
             >> null >> observation_time
             >> null >> release_date
-            >> null >> null >> null >> deadline;
+            >> null >> meridian
+            >> null >> deadline;
         add_target(
                     release_date,
+                    meridian,
                     deadline,
                     observation_time,
                     profit);
@@ -90,12 +95,14 @@ std::ostream& Instance::print(
             << std::setw(12) << "Target"
             << std::setw(12) << "Obs. time"
             << std::setw(12) << "Rel. date"
+            << std::setw(12) << "Meirdian"
             << std::setw(12) << "Deadline"
             << std::setw(12) << "Profit"
             << std::endl
             << std::setw(12) << "------"
             << std::setw(12) << "---------"
             << std::setw(12) << "---------"
+            << std::setw(12) << "--------"
             << std::setw(12) << "--------"
             << std::setw(12) << "------"
             << std::endl;
@@ -107,6 +114,7 @@ std::ostream& Instance::print(
                 << std::setw(12) << target_id
                 << std::setw(12) << target.observation_time
                 << std::setw(12) << target.release_date
+                << std::setw(12) << target.meridian
                 << std::setw(12) << target.deadline
                 << std::setw(12) << target.profit
                 << std::endl;

@@ -1,12 +1,12 @@
 #include "columngenerationsolver/commons.hpp"
 
-#include "starobservationschedulingsolver/algorithms/column_generation.hpp"
+#include "flexiblestarobservationschedulingsolver/algorithms/column_generation.hpp"
 
-#include "singlenightstarobservationschedulingsolver/algorithms/dynamic_programming.hpp"
+#include "flexiblesinglenightstarobservationschedulingsolver/algorithms/dynamic_programming.hpp"
 
 #include "columngenerationsolver/algorithms/greedy.hpp"
 
-using namespace starobservationschedulingsolver;
+using namespace flexiblestarobservationschedulingsolver;
 
 typedef columngenerationsolver::RowIdx RowIdx;
 typedef columngenerationsolver::ColIdx ColIdx;
@@ -38,7 +38,7 @@ private:
     std::vector<int8_t> fixed_targets_;
     std::vector<int8_t> fixed_nights_;
 
-    std::vector<TargetId> snsosp2sosp_;
+    std::vector<std::pair<TargetId, std::vector<Counter>>> snsosp2sosp_;
 
 };
 
@@ -98,8 +98,8 @@ std::vector<ColIdx> PricingSolver::initialize_pricing(
 struct ColumnExtra
 {
     NightId night_id;
-    singlenightstarobservationschedulingsolver::Solution snsosp_solution;
-    std::vector<ObservableId> snsosp2sosp;
+    flexiblesinglenightstarobservationschedulingsolver::Solution snsosp_solution;
+    std::vector<std::pair<ObservableId, std::vector<Counter>>> snsosp2sosp;
 };
 
 std::vector<Column> PricingSolver::solve_pricing(
@@ -113,7 +113,7 @@ std::vector<Column> PricingSolver::solve_pricing(
             continue;
 
         // Build subproblem instance.
-        singlenightstarobservationschedulingsolver::Instance snsosp_instance;
+        flexiblesinglenightstarobservationschedulingsolver::Instance snsosp_instance;
         snsosp2sosp_.clear();
         for (ObservableId observable_id = 0;
                 observable_id < instance_.number_of_observables(night_id);
@@ -121,24 +121,34 @@ std::vector<Column> PricingSolver::solve_pricing(
             const Observable& observable = instance_.observable(night_id, observable_id);
             if (fixed_targets_[observable.target_id] == 1)
                 continue;
-            singlenightstarobservationschedulingsolver::Profit profit
-                = (singlenightstarobservationschedulingsolver::Profit)instance_.profit(observable.target_id)
-                - duals[instance_.number_of_nights() + observable.target_id];
-            if (profit <= 0)
-                continue;
-            snsosp_instance.add_target(
-                    observable.release_date,
-                    observable.meridian,
-                    observable.deadline,
-                    observable.observation_time,
-                    profit);
-            snsosp2sosp_.push_back(observable_id);
+            flexiblesinglenightstarobservationschedulingsolver::TargetId snsosp_target_id = -1;
+            for (Counter observation_time_pos = 0;
+                    observation_time_pos < (Counter)observable.observation_times.size();
+                    ++observation_time_pos) {
+                flexiblesinglenightstarobservationschedulingsolver::Profit profit
+                    = observable.profits[observation_time_pos]
+                    - duals[instance_.number_of_nights() + observable.target_id];
+                if (profit <= 0)
+                    continue;
+                if (snsosp_target_id == -1) {
+                    snsosp_target_id = snsosp_instance.add_target(
+                            observable.release_date,
+                            observable.meridian,
+                            observable.deadline);
+                    snsosp2sosp_.push_back({observable_id, std::vector<Counter>()});
+                }
+                snsosp_instance.add_observation_time(
+                        snsosp_target_id,
+                        observable.observation_times[observation_time_pos],
+                        profit);
+                snsosp2sosp_[snsosp_target_id].second.push_back(observation_time_pos);
+            }
         }
 
         // Solve subproblem instance.
-        singlenightstarobservationschedulingsolver::DynamicProgrammingOptionalParameters snsosp_parameters;
+        flexiblesinglenightstarobservationschedulingsolver::DynamicProgrammingOptionalParameters snsosp_parameters;
         //snsosp_parameters.info.set_verbosity_level(1);
-        auto snsosp_output = singlenightstarobservationschedulingsolver::dynamic_programming(
+        auto snsosp_output = flexiblesinglenightstarobservationschedulingsolver::dynamic_programming(
                 snsosp_instance,
                 snsosp_parameters);
         //std::cout << "night_id " << night_id
@@ -149,16 +159,17 @@ std::vector<Column> PricingSolver::solve_pricing(
         Column column;
         column.row_indices.push_back(night_id);
         column.row_coefficients.push_back(1);
-        for (singlenightstarobservationschedulingsolver::TargetId snsosp_observation_pos = 0;
+        for (flexiblesinglenightstarobservationschedulingsolver::TargetId snsosp_observation_pos = 0;
                 snsosp_observation_pos < snsosp_output.solution.number_of_observations();
                 ++snsosp_observation_pos) {
             const auto& snsosp_observation = snsosp_output.solution.observation(snsosp_observation_pos);
-            ObservableId observable_id = snsosp2sosp_[snsosp_observation.target_id];
+            ObservableId observable_id = snsosp2sosp_[snsosp_observation.target_id].first;
+            Counter observation_time_pos = snsosp2sosp_[snsosp_observation.target_id].second[snsosp_observation.observation_time_pos];
             const Observable& observable = instance_.observable(night_id, observable_id);
             column.row_indices.push_back(
                     instance_.number_of_nights() + observable.target_id);
             column.row_coefficients.push_back(1);
-            column.objective_coefficient += instance_.profit(observable.target_id);
+            column.objective_coefficient += observable.profits[observation_time_pos];
         }
         // Extra.
         ColumnExtra extra {night_id, snsosp_output.solution, snsosp2sosp_};
@@ -172,16 +183,20 @@ Solution columns2solution(
         const Instance& instance,
         const std::vector<std::pair<Column, Value>>& columns)
 {
-    std::vector<std::vector<std::pair<ObservableId, Time>>> sol(instance.number_of_nights());
+    std::vector<std::vector<std::tuple<ObservableId, Counter, Time>>> sol(instance.number_of_nights());
     for (const auto& colval: columns) {
         std::shared_ptr<ColumnExtra> extra
             = std::static_pointer_cast<ColumnExtra>(colval.first.extra);
-        for (singlenightstarobservationschedulingsolver::TargetId snsosp_observation_pos = 0;
+        for (flexiblesinglenightstarobservationschedulingsolver::TargetId snsosp_observation_pos = 0;
                 snsosp_observation_pos < extra->snsosp_solution.number_of_observations();
                 ++snsosp_observation_pos) {
             const auto& snsosp_observation = extra->snsosp_solution.observation(snsosp_observation_pos);
-            ObservableId observable_id = extra->snsosp2sosp[snsosp_observation.target_id];
-            sol[extra->night_id].push_back({observable_id, snsosp_observation.start_time});
+            ObservableId observable_id = extra->snsosp2sosp[snsosp_observation.target_id].first;
+            Counter observation_time_pos = extra->snsosp2sosp[snsosp_observation.target_id].second[snsosp_observation.observation_time_pos];
+            sol[extra->night_id].push_back({
+                    observable_id,
+                    observation_time_pos,
+                    snsosp_observation.start_time});
         }
     }
 
@@ -191,19 +206,24 @@ Solution columns2solution(
             ++night_id) {
         sort(sol[night_id].begin(), sol[night_id].end(),
                 [](
-                    const std::pair<ObservableId, Time>& os1,
-                    const std::pair<ObservableId, Time>& os2) -> bool
+                    const std::tuple<ObservableId, Counter, Time>& os1,
+                    const std::tuple<ObservableId, Counter, Time>& os2) -> bool
                 {
-                    return os1.second < os2.second;
+                    return std::get<2>(os1) < std::get<2>(os2);
                 });
-        for (const auto& os: sol[night_id])
-            solution.append_observation(night_id, os.first, os.second);
+        for (const auto& os: sol[night_id]) {
+            solution.append_observation(
+                    night_id,
+                    std::get<0>(os),
+                    std::get<1>(os),
+                    std::get<2>(os));
+        }
     }
 
     return solution;
 }
 
-ColumnGenerationGreedyOutput starobservationschedulingsolver::column_generation_greedy(
+ColumnGenerationGreedyOutput flexiblestarobservationschedulingsolver::column_generation_greedy(
         const Instance& instance,
         ColumnGenerationOptionalParameters parameters)
 {
@@ -223,6 +243,7 @@ ColumnGenerationGreedyOutput starobservationschedulingsolver::column_generation_
     columngenerationsolver::Parameters p = get_parameters(instance);
     columngenerationsolver::GreedyOptionalParameters op;
     op.info.set_time_limit(parameters.info.remaining_time());
+    //op.info.set_verbosity_level(1);
     op.column_generation_parameters.linear_programming_solver
         = columngenerationsolver::s2lps(parameters.linear_programming_solver);
     auto greedy_output = columngenerationsolver::greedy(p, op);

@@ -20,7 +20,6 @@ Output singlenightstarobservationschedulingsolver::dynamic_programming(
         const Instance& instance,
         DynamicProgrammingOptionalParameters parameters)
 {
-
     init_display(instance, parameters.info);
     parameters.info.os()
         << "Algorithm" << std::endl
@@ -30,7 +29,6 @@ Output singlenightstarobservationschedulingsolver::dynamic_programming(
 
     Output output(instance, parameters.info);
 
-    TargetId n = instance.number_of_targets();
     Solution solution(instance);
     //std::cout << "n " << n << std::endl;
     //for (TargetId j = 0; j < n; ++j)
@@ -42,29 +40,31 @@ Output singlenightstarobservationschedulingsolver::dynamic_programming(
     //        << std::endl;
 
     // Sort targets.
-    std::vector<TargetId> sorted_targets(n);
+    std::vector<TargetId> sorted_targets(instance.number_of_targets());
     std::iota(sorted_targets.begin(), sorted_targets.end(), 0);
-    sort(sorted_targets.begin(), sorted_targets.end(),
+    sort(
+            sorted_targets.begin(),
+            sorted_targets.end(),
             [&instance](TargetId target_id_1, TargetId target_id_2) -> bool
             {
-                return instance.target(target_id_1).release_date
-                    + instance.target(target_id_1).deadline
-                    < instance.target(target_id_2).release_date
-                    + instance.target(target_id_2).deadline;
+                return instance.target(target_id_1).meridian
+                    < instance.target(target_id_2).meridian;
             });
 
     // Compute states.
-    std::vector<std::vector<DynamicProgrammingState>> states(n + 1);
+    std::vector<std::vector<DynamicProgrammingState>> states(instance.number_of_targets() + 1);
     states[0].push_back({0, 0, -1, nullptr});
-    for (TargetId target_pos = 0; target_pos < n; ++target_pos) {
+    for (TargetId target_pos = 0;
+            target_pos < instance.number_of_targets();
+            ++target_pos) {
         TargetId target_id = sorted_targets[target_pos];
         const Target& target = instance.target(target_id);
         //std::cout << "target_pos " << target_pos
-        //    << " j " << j
-        //    << " m " << (double)(rj + dj) / 2
+        //    << " target_id " << target_id
+        //    << " meridian " << target.meridian
         //    << " states[target_pos].size() " << states[target_pos].size()
         //    << std::endl;
-        auto it  = states[target_pos].begin();
+        auto it = states[target_pos].begin();
         auto it1 = states[target_pos].begin();
         while (it != states[target_pos].end() || it1 != states[target_pos].end()) {
             if (it1 != states[target_pos].end()
@@ -111,7 +111,7 @@ Output singlenightstarobservationschedulingsolver::dynamic_programming(
 
     // Find best state.
     const DynamicProgrammingState* s_best = nullptr;
-    for (const DynamicProgrammingState& s: states[n])
+    for (const DynamicProgrammingState& s: states[instance.number_of_targets()])
         if (s_best == nullptr || s_best->profit < s.profit)
             s_best = &s;
     //std::cout << "s_best t " << s_best.time << " profit " << s_best.profit << std::endl;

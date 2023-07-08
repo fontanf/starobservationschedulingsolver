@@ -1,28 +1,8 @@
-/**
- * Star Observation Scheduling Problem.
- *
- * Input:
- * - m nights
- * - n targets; for each target j = 1..n, a profit wⱼ
- * - a list of possible observations. An observation is associated to a night i
- *   and a target j and has a time-window [rᵢⱼ, dᵢⱼ] and a duration pᵢⱼ such
- *   that 2 pⱼᵢ ≥ dⱼᵢ - rⱼᵢ
- * Problem:
- * - select a list of observations and their starting dates sᵢⱼ such that:
- *   - a target is observed at most once
- *   - observations do not overlap
- *   - starting dates satisfy the time-windows, i.e. rᵢⱼ <= sᵢⱼ and
- *     sᵢⱼ + pᵢⱼ <= dᵢⱼ
- * Objective:
- * - maximize the overall profit of the selected observations
- *
- */
-
 #pragma once
 
 #include "optimizationtools/utils/info.hpp"
 
-namespace starobservationschedulingsolver
+namespace flexiblestarobservationschedulingsolver
 {
 
 using NightId = int64_t;
@@ -50,12 +30,18 @@ struct Observable
     /** Deadline of the observable. */
     Time deadline;
 
-    /** Observation time of the observable. */
-    Time observation_time;
+    /** Observation times of the observable. */
+    std::vector<Time> observation_times;
+
+    /** Profits of the observation. */
+    std::vector<Profit> profits;
+
+    /** Maximum profit. */
+    Profit maximum_profit = 0;
 };
 
 /**
- * Instance class for a 'starobservationscheduling' problem.
+ * Instance class for a 'flexiblestarobservationscheduling' problem.
  */
 class Instance
 {
@@ -70,21 +56,22 @@ public:
     Instance(
             NightId number_of_nights,
             TargetId number_of_targets):
-        observables_(number_of_nights),
-        profits_(number_of_targets) {  }
+        number_of_targets_(number_of_targets),
+        observables_(number_of_nights) {  }
 
     /** Add an observable. */
-    void add_observable(
+    ObservableId add_observable(
             NightId night_id,
             TargetId target_id,
             Time release_date,
             Time meridian,
-            Time deadline,
-            Time observation_time);
+            Time deadline);
 
-    /** Set the profit of a target. */
-    void set_profit(
-            TargetId target_id,
+    /** Add an observation time for an observable. */
+    void add_observation_time(
+            NightId night_id,
+            ObservableId observable_id,
+            Time observation_time,
             Profit profit);
 
     /** Build an instance from a file. */
@@ -100,7 +87,7 @@ public:
     NightId number_of_nights() const { return observables_.size(); }
 
     /** Get the number of targets. */
-    TargetId number_of_targets() const { return profits_.size(); }
+    TargetId number_of_targets() const { return number_of_targets_; }
 
     /** Get the total number of observables. */
     ObservableId number_of_observables() const { return number_of_observables_; }
@@ -116,9 +103,6 @@ public:
         return observables_[night_id][observable_id];
     }
 
-    /** Get the profit of a target. */
-    Profit profit(TargetId target_id) const { return profits_[target_id]; }
-
     /** Get the total profit of the targets. */
     Profit total_profit() const { return profit_sum_; }
 
@@ -130,6 +114,9 @@ public:
     std::ostream& print(
             std::ostream& os,
             int verbose = 1) const;
+
+    /** Write the instance to a file. */
+    void write(std::string instance_path) const;
 
     /*
      * Checkers
@@ -148,20 +135,21 @@ private:
      */
 
     /** Read an instance from a file in 'catusse2016' format. */
-    void read_catusse2016(std::ifstream& file);
+    void read_catusse2016(
+            std::ifstream& file);
 
     /*
      * Private attributes
      */
+
+    /** Number of targets. */
+    TargetId number_of_targets_ = 0;
 
     /** Observables. */
     std::vector<std::vector<Observable>> observables_;
 
     /** Number of observables. */
     ObservableId number_of_observables_ = 0;
-
-    /** Profits of the targets. */
-    std::vector<Profit> profits_;
 
     /*
      * Computed attributes

@@ -1,24 +1,8 @@
-/**
- * Single-night star observation scheduling problem.
- *
- * Input:
- * - n targets with profit wⱼ, time-window [rⱼ, dⱼ] and duration pⱼ such
- *   that 2 pⱼ ≥ dⱼ - rⱼ (j = 1..n)
- * Problem:
- * - select a list of targets and their starting dates sⱼ such that:
- *   - a target is observed at most once
- *   - observations do not overlap
- *   - starting dates satisfy the time-windows, i.e. rⱼ <= sⱼ and
- *     sⱼ + pⱼ <= dⱼ
- * Objective:
- * - maximize the overall profit of the selected targets
- */
-
 #pragma once
 
 #include "optimizationtools/utils/info.hpp"
 
-namespace singlenightstarobservationschedulingsolver
+namespace flexiblesinglenightstarobservationschedulingsolver
 {
 
 using TargetId = int64_t;
@@ -40,15 +24,15 @@ struct Target
     /** Deadline. */
     Time deadline;
 
-    /** Observation time. */
-    Time observation_time;
+    /** Observation times. */
+    std::vector<Time> observation_times;
 
-    /** Profit; */
-    Profit profit;
+    /** Profits. */
+    std::vector<Profit> profits;
 };
 
 /**
- * Instance class for a 'singlenightstarobservationschedulingsolver' problem.
+ * Instance class for a 'flexiblesinglenightstarobservationschedulingsolver' problem.
  */
 class Instance
 {
@@ -63,10 +47,14 @@ public:
     Instance() { }
 
     /** Add a target. */
-    void add_target(
+    TargetId add_target(
             Time release_date,
             Time meridian,
-            Time deadline,
+            Time deadline);
+
+    /** Add an observation time for a target. */
+    void add_observation_time(
+            TargetId target_id,
             Time observation_time,
             Profit profit);
 

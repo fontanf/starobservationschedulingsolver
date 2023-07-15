@@ -3,6 +3,7 @@
 #include "starobservationschedulingsolver/solution.hpp"
 
 #include "starobservationschedulingsolver/algorithms/column_generation.hpp"
+#include "starobservationschedulingsolver/algorithms/benders_decomposition.hpp"
 
 #include <random>
 

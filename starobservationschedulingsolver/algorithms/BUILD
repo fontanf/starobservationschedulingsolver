@@ -15,11 +15,23 @@ cc_library(
 )
 
 cc_library(
+        name = "benders_decomposition",
+        hdrs = ["benders_decomposition.hpp"],
+        srcs = ["benders_decomposition.cpp"],
+        deps = [
+                "//starobservationschedulingsolver:starobservationschedulingsolver",
+        ] + ALL_DEP,
+        copts = ALL_COPTS,
+        visibility = ["//visibility:public"],
+)
+
+cc_library(
         name = "algorithms",
         hdrs = ["algorithms.hpp"],
         srcs = ["algorithms.cpp"],
         deps = [
                 "column_generation",
+                "benders_decomposition",
                 "@boost//:program_options",
         ],
         visibility = ["//visibility:public"],

@@ -26,5 +26,5 @@ XPRESS_DEP = select({
             "//starobservationschedulingsolver:xpress_build": ["@xpress//:xpress"],
             "//conditions:default": []})
 
-ALL_COPTS = CLP_COPTS + XPRESS_DEP + CPLEX_DEP
+ALL_COPTS = CLP_COPTS + XPRESS_COPTS + CPLEX_COPTS
 ALL_DEP = CLP_DEP + XPRESS_DEP + CPLEX_DEP

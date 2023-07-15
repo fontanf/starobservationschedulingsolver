@@ -33,5 +33,8 @@ def Settings(**kwargs):
                 '-I', './bazel-starobservationschedulingsolver/external/'
                 # '-I', './../'
                 'treesearchsolver/',
+
+                # Xpress
+                '-I', '/opt/xpressmp/include/',
                 ],
             }

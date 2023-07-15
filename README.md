@@ -46,6 +46,7 @@ Problem description:
 
 Implemented algorithms:
 * Column generation heuristic implemented with [fontanf/columngenerationsolver](https://github.com/fontanf/columngenerationsolver) `-a column_generation`
+* Benders decomposition `-a benders_decomposition`
 
 ## Flexible star observation scheduling problems
 

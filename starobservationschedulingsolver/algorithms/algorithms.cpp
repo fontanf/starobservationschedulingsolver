@@ -28,6 +28,11 @@ Output starobservationschedulingsolver::run(
         parameters.info = info;
         return column_generation_greedy(instance, parameters);
 
+    } else if (algorithm_args[0] == "benders_decomposition") {
+        BendersDecompositionOptionalParameters parameters;
+        parameters.info = info;
+        return benders_decomposition(instance, parameters);
+
     } else {
         throw std::invalid_argument(
                 "Unknown algorithm \"" + algorithm_args[0] + "\".");

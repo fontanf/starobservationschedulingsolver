@@ -6,7 +6,10 @@ CLP_COPTS = select({
             "//starobservationschedulingsolver:clp_build": ["-DCLP_FOUND"],
             "//conditions:default": []})
 CLP_DEP = select({
-            "//starobservationschedulingsolver:clp_build": ["@coinor//:clp"],
+            "//starobservationschedulingsolver:clp_windows": ["@clp_windows//:clp"],
+            "//conditions:default": []
+        }) + select({
+            "//starobservationschedulingsolver:clp_linux": ["@clp_linux//:clp"],
             "//conditions:default": []})
 
 CPLEX_COPTS = select({

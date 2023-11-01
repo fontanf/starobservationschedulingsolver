@@ -1,4 +1,4 @@
-# Star observation scheduling solver
+# StarObservationSchedulingSolver
 
 A solver for star observation scheduling problems.
 
@@ -24,7 +24,7 @@ Problem description:
 * Objective: maximize the overall profit of the selected targets
 
 Implemented algorithms:
-* Dynamic programming `-a dynamic_programming`
+* Dynamic programming `-a dynamic-programming`
 
 ## Star observation scheduling problem
 
@@ -45,8 +45,8 @@ Problem description:
 * Objective: maximize the overall profit of the selected observations
 
 Implemented algorithms:
-* Column generation heuristic implemented with [fontanf/columngenerationsolver](https://github.com/fontanf/columngenerationsolver) `-a column_generation`
-* Benders decomposition `-a benders_decomposition`
+* Column generation heuristic implemented with [fontanf/columngenerationsolver](https://github.com/fontanf/columngenerationsolver) `-a column-generation`
+* Benders decomposition `-a benders-decomposition`
 
 ## Flexible star observation scheduling problems
 
@@ -57,12 +57,12 @@ For each possible observation, instead of a single observation time and profit, 
 ### Flexible single-night star observation scheduling problem
 
 Implemented algorithms:
-* Dynamic programming `-a dynamic_programming`
+* Dynamic programming `-a dynamic-programming`
 
 ### Flexible star observation scheduling problem
 
 Implemented algorithms:
-* Column generation heuristic implemented with [fontanf/columngenerationsolver](https://github.com/fontanf/columngenerationsolver) `-a column_generation`
+* Column generation heuristic implemented with [fontanf/columngenerationsolver](https://github.com/fontanf/columngenerationsolver) `-a column-generation`
 
 ![scheduleflexibleexample](img/schedule_flexible_example.png?raw=true "Flexible schedule example")
 
@@ -76,12 +76,16 @@ bazel build -- //...
 Examples:
 
 ```shell
-./bazel-bin/starobservationschedulingsolver/main -v 1 -i ./data/starobservationscheduling/catusse2016/real.txt -a column_generation -c solution.txt
+./bazel-bin/starobservationschedulingsolver/starobservationscheduling/main -v 1 -i ./data/starobservationscheduling/catusse2016/real.txt -a column-generation -c solution.txt
 ```
 ```
-======================================
-  Star observation scheduling solver  
-======================================
+=======================================
+    StarObservationSchedulingSolver    
+=======================================
+
+Problem
+-------
+Star observation scheduling problem
 
 Instance
 --------
@@ -91,7 +95,7 @@ Number of observables:  42929
 
 Algorithm
 ---------
-Column Generation Heuristic - Greedy
+Column generation heuristic - greedy
 
 Parameters
 ----------
@@ -100,8 +104,8 @@ Linear programming solver:  CLP
        T (s)              LB              UB             GAP     GAP (%)                 Comment
        -----              --              --             ---     -------                 -------
        0.000               0           20000           20000      100.00                        
-     117.133               0           18620           18620      100.00                        
-     117.133           18620           18620               0        0.00                        
+     103.407               0           18620           18620      100.00                        
+     103.408           18620           18620               0        0.00                        
 
 Final statistics
 ----------------
@@ -109,7 +113,7 @@ Value:                        18620
 Bound:                        18620
 Absolute optimality gap:      0
 Relative optimality gap (%):  0
-Time (s):                     117.133
+Time (s):                     103.416
 
 Solution
 --------
@@ -120,6 +124,6 @@ Profit:             18620 / 20000 (93.1%)
 
 Visualize:
 ```
-python3 starobservationschedulingsolver/visualizer.py solution.txt
+python3 starobservationschedulingsolver/starobservationscheduling/visualizer.py solution.txt
 ```
 

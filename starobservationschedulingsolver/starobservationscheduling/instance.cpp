@@ -1,5 +1,7 @@
 #include "starobservationschedulingsolver/starobservationscheduling/instance.hpp"
 
+#include "starobservationschedulingsolver/starobservationscheduling/instance_builder.hpp"
+
 #include "optimizationtools/utils/utils.hpp"
 #include "optimizationtools/containers/indexed_set.hpp"
 
@@ -8,34 +10,6 @@
 #include <iomanip>
 
 using namespace starobservationschedulingsolver::starobservationscheduling;
-
-void Instance::add_observable(
-        NightId night_id,
-        TargetId target_id,
-        Time release_date,
-        Time meridian,
-        Time deadline,
-        Time observation_time)
-{
-    Observable observable;
-    observable.target_id = target_id;
-    observable.release_date = release_date;
-    observable.meridian = meridian;
-    observable.deadline = deadline;
-    observable.observation_time = observation_time;
-    observables_[night_id].push_back(observable);
-
-    number_of_observables_++;
-}
-
-void Instance::set_profit(
-        TargetId target_id,
-        Profit profit)
-{
-    profit_sum_ -= profits_[target_id];
-    profits_[target_id] = profit;
-    profit_sum_ += profits_[target_id];
-}
 
 Instance::Instance(
         std::string instance_path,
@@ -69,13 +43,12 @@ void Instance::read_catusse2016(std::ifstream& file)
     std::getline(file, line);
     std::istringstream iss_m(line);
     iss_m >> null >> null >> number_of_nights;
-    observables_ = std::vector<std::vector<Observable>>(number_of_nights);
 
     std::getline(file, line);
     std::istringstream iss_n(line);
     iss_n >> null >> null >> number_of_targets;
-    profits_ = std::vector<Profit>(number_of_targets);
 
+    InstanceBuilder instance_builder(number_of_nights, number_of_targets);
     Profit profit = -1;
     Time observation_time = -1;
     Time release_date = -1;
@@ -87,7 +60,7 @@ void Instance::read_catusse2016(std::ifstream& file)
         std::getline(file, line);
         std::istringstream iss(line);
         iss >> null >> null >> null >> null >> profit;
-        set_profit(target_id, profit);
+        instance_builder.set_profit(target_id, profit);
 
         for (NightId night_id = 0;
                 night_id < number_of_nights;
@@ -101,7 +74,7 @@ void Instance::read_catusse2016(std::ifstream& file)
                 >> null >> release_date
                 >> null >> meridian
                 >> null >> deadline;
-            add_observable(
+            instance_builder.add_observable(
                     night_id,
                     target_id,
                     release_date,
@@ -110,6 +83,7 @@ void Instance::read_catusse2016(std::ifstream& file)
                     observation_time);
         }
     }
+    *this = instance_builder.build();
 }
 
 std::ostream& Instance::print(

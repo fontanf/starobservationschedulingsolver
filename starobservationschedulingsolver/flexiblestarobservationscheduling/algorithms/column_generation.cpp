@@ -2,6 +2,7 @@
 
 #include "starobservationschedulingsolver/flexiblestarobservationscheduling/algorithms/column_generation.hpp"
 
+#include "starobservationschedulingsolver/flexiblesinglenightstarobservationscheduling/instance_builder.hpp"
 #include "starobservationschedulingsolver/flexiblesinglenightstarobservationscheduling/algorithms/dynamic_programming.hpp"
 
 #include "columngenerationsolver/algorithms/greedy.hpp"
@@ -116,7 +117,7 @@ std::vector<Column> PricingSolver::solve_pricing(
             continue;
 
         // Build subproblem instance.
-        starobservationschedulingsolver::flexiblesinglenightstarobservationscheduling::Instance snsosp_instance;
+        starobservationschedulingsolver::flexiblesinglenightstarobservationscheduling::InstanceBuilder snsosp_instance_builder;
         snsosp2sosp_.clear();
         for (ObservableId observable_id = 0;
                 observable_id < instance_.number_of_observables(night_id);
@@ -134,19 +135,20 @@ std::vector<Column> PricingSolver::solve_pricing(
                 if (profit <= 0)
                     continue;
                 if (snsosp_target_id == -1) {
-                    snsosp_target_id = snsosp_instance.add_target(
+                    snsosp_target_id = snsosp_instance_builder.add_target(
                             observable.release_date,
                             observable.meridian,
                             observable.deadline);
                     snsosp2sosp_.push_back({observable_id, std::vector<Counter>()});
                 }
-                snsosp_instance.add_observation_time(
+                snsosp_instance_builder.add_observation_time(
                         snsosp_target_id,
                         observable.observation_times[observation_time_pos],
                         profit);
                 snsosp2sosp_[snsosp_target_id].second.push_back(observation_time_pos);
             }
         }
+        starobservationschedulingsolver::flexiblesinglenightstarobservationscheduling::Instance snsosp_instance = snsosp_instance_builder.build();
 
         // Solve subproblem instance.
         starobservationschedulingsolver::flexiblesinglenightstarobservationscheduling::DynamicProgrammingOptionalParameters snsosp_parameters;

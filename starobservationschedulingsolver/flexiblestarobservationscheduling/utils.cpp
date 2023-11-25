@@ -1,12 +1,14 @@
 #include "starobservationschedulingsolver/flexiblestarobservationscheduling/utils.hpp"
 
+#include "starobservationschedulingsolver/flexiblestarobservationscheduling/instance_builder.hpp"
+
 using namespace starobservationschedulingsolver::flexiblestarobservationscheduling;
 
 Instance starobservationschedulingsolver::flexiblestarobservationscheduling::sosp2fsosp(
         const starobservationschedulingsolver::starobservationscheduling::Instance& sosp_instance,
         const std::vector<double>& coefs)
 {
-    Instance instance(
+    InstanceBuilder instance_builder(
             sosp_instance.number_of_nights(),
             sosp_instance.number_of_targets());
 
@@ -17,7 +19,7 @@ Instance starobservationschedulingsolver::flexiblestarobservationscheduling::sos
                 sosp_observable_id < sosp_instance.number_of_observables(night_id);
                 ++sosp_observable_id) {
             const auto& observable = sosp_instance.observable(night_id, sosp_observable_id);
-            ObservableId observable_id = instance.add_observable(
+            ObservableId observable_id = instance_builder.add_observable(
                     night_id,
                     observable.target_id,
                     observable.release_date,
@@ -30,7 +32,7 @@ Instance starobservationschedulingsolver::flexiblestarobservationscheduling::sos
                 Profit reduced_profit = sosp_instance.profit(observable.target_id)
                     * reduced_observation_time
                     / observable.observation_time;
-                instance.add_observation_time(
+                instance_builder.add_observation_time(
                         night_id,
                         observable_id,
                         reduced_observation_time,
@@ -38,7 +40,7 @@ Instance starobservationschedulingsolver::flexiblestarobservationscheduling::sos
             }
 
             // Add full duration observation time.
-            instance.add_observation_time(
+            instance_builder.add_observation_time(
                     night_id,
                     observable_id,
                     observable.observation_time,
@@ -46,14 +48,14 @@ Instance starobservationschedulingsolver::flexiblestarobservationscheduling::sos
         }
     }
 
-    return instance;
+    return instance_builder.build();
 }
 
 Instance starobservationschedulingsolver::flexiblestarobservationscheduling::sosp2fsosp(
         const starobservationschedulingsolver::starobservationscheduling::Instance& sosp_instance,
         double coef)
 {
-    Instance instance(
+    InstanceBuilder instance_builder(
             sosp_instance.number_of_nights(),
             sosp_instance.number_of_targets());
 
@@ -64,7 +66,7 @@ Instance starobservationschedulingsolver::flexiblestarobservationscheduling::sos
                 sosp_observable_id < sosp_instance.number_of_observables(night_id);
                 ++sosp_observable_id) {
             const auto& observable = sosp_instance.observable(night_id, sosp_observable_id);
-            ObservableId observable_id = instance.add_observable(
+            ObservableId observable_id = instance_builder.add_observable(
                     night_id,
                     observable.target_id,
                     observable.release_date,
@@ -79,7 +81,7 @@ Instance starobservationschedulingsolver::flexiblestarobservationscheduling::sos
                 Profit profit = sosp_instance.profit(observable.target_id)
                     * observation_time
                     / observable.observation_time;
-                instance.add_observation_time(
+                instance_builder.add_observation_time(
                         night_id,
                         observable_id,
                         observation_time,
@@ -88,5 +90,5 @@ Instance starobservationschedulingsolver::flexiblestarobservationscheduling::sos
         }
     }
 
-    return instance;
+    return instance_builder.build();
 }

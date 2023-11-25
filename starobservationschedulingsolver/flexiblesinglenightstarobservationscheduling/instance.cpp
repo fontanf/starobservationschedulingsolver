@@ -1,32 +1,11 @@
 #include "starobservationschedulingsolver/flexiblesinglenightstarobservationscheduling/instance.hpp"
 
+#include "starobservationschedulingsolver/flexiblesinglenightstarobservationscheduling/instance_builder.hpp"
+
 #include "optimizationtools/utils/utils.hpp"
 #include "optimizationtools/containers/indexed_set.hpp"
 
 using namespace starobservationschedulingsolver::flexiblesinglenightstarobservationscheduling;
-
-TargetId Instance::add_target(
-        Time release_date,
-        Time meridian,
-        Time deadline)
-{
-    Target target;
-    target.release_date = release_date;
-    target.meridian = meridian;
-    target.deadline = deadline;
-    targets_.push_back(target);
-
-    return targets_.size() - 1;
-}
-
-void Instance::add_observation_time(
-        TargetId target_id,
-        Time observation_time,
-        Profit profit)
-{
-    targets_[target_id].observation_times.push_back(observation_time);
-    targets_[target_id].profits.push_back(profit);
-}
 
 Instance::Instance(
         std::string instance_path,
@@ -51,6 +30,8 @@ Instance::Instance(
 
 void Instance::read_default(std::ifstream& file)
 {
+    InstanceBuilder instance_builder;
+
     TargetId number_of_targets;
     std::string null;
     std::string line;
@@ -88,19 +69,20 @@ void Instance::read_default(std::ifstream& file)
         iss >> null >> release_date
             >> null >> meridian
             >> null >> deadline;
-        add_target(
+        instance_builder.add_target(
                     release_date,
                     meridian,
                     deadline);
         for (Counter observation_time_pos = 0;
                 observation_time_pos < number_of_observation_times;
                 ++observation_time_pos) {
-            add_observation_time(
+            instance_builder.add_observation_time(
                     target_id,
                     observation_times[observation_time_pos],
                     profits[observation_time_pos]);
         }
     }
+    *this = instance_builder.build();
 }
 
 std::ostream& Instance::print(

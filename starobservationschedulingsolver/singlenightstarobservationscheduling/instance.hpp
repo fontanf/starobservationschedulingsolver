@@ -61,17 +61,6 @@ public:
      * Constructors and destructor
      */
 
-    /** Constructor to build an instance manually. */
-    Instance() { }
-
-    /** Add a target. */
-    void add_target(
-            Time release_date,
-            Time meridian,
-            Time deadline,
-            Time observation_time,
-            Profit profit);
-
     /** Build an instance from a file. */
     Instance(
             std::string instance_path,
@@ -105,6 +94,9 @@ private:
      * Private methods
      */
 
+    /** Create an instance manually. */
+    Instance() { }
+
     /** Read an instance from a file in 'default' format. */
     void read_default(std::ifstream& file);
 
@@ -117,6 +109,8 @@ private:
 
     /** Total profit. */
     Profit total_profit_ = 0;
+
+    friend class InstanceBuilder;
 
 };
 

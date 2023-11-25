@@ -1,27 +1,11 @@
 #include "starobservationschedulingsolver/singlenightstarobservationscheduling/instance.hpp"
 
+#include "starobservationschedulingsolver/singlenightstarobservationscheduling/instance_builder.hpp"
+
 #include "optimizationtools/utils/utils.hpp"
 #include "optimizationtools/containers/indexed_set.hpp"
 
 using namespace starobservationschedulingsolver::singlenightstarobservationscheduling;
-
-void Instance::add_target(
-        Time release_date,
-        Time meridian,
-        Time deadline,
-        Time observation_time,
-        Profit profit)
-{
-    Target target;
-    target.release_date = release_date;
-    target.meridian = meridian,
-    target.deadline = deadline;
-    target.observation_time = observation_time;
-    target.profit = profit;
-    targets_.push_back(target);
-
-    total_profit_ += profit;
-}
 
 Instance::Instance(
         std::string instance_path,
@@ -56,6 +40,8 @@ void Instance::read_default(std::ifstream& file)
     std::istringstream iss_n(line);
     iss_n >> null >> null >> number_of_targets;
 
+    InstanceBuilder instance_builder;
+
     Profit profit = -1;
     Time observation_time = -1;
     Time release_date = -1;
@@ -71,13 +57,14 @@ void Instance::read_default(std::ifstream& file)
             >> null >> release_date
             >> null >> meridian
             >> null >> deadline;
-        add_target(
+        instance_builder.add_target(
                     release_date,
                     meridian,
                     deadline,
                     observation_time,
                     profit);
     }
+    *this = instance_builder.build();
 }
 
 std::ostream& Instance::print(

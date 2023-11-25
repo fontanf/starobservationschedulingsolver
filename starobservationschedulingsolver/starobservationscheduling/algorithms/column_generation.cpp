@@ -2,6 +2,7 @@
 
 #include "starobservationschedulingsolver/starobservationscheduling/algorithms/column_generation.hpp"
 
+#include "starobservationschedulingsolver/singlenightstarobservationscheduling/instance_builder.hpp"
 #include "starobservationschedulingsolver/singlenightstarobservationscheduling/algorithms/dynamic_programming.hpp"
 
 #include "columngenerationsolver/algorithms/greedy.hpp"
@@ -116,7 +117,7 @@ std::vector<Column> PricingSolver::solve_pricing(
             continue;
 
         // Build subproblem instance.
-        starobservationschedulingsolver::singlenightstarobservationscheduling::Instance snsosp_instance;
+        starobservationschedulingsolver::singlenightstarobservationscheduling::InstanceBuilder snsosp_instance_builder;
         snsosp2sosp_.clear();
         for (ObservableId observable_id = 0;
                 observable_id < instance_.number_of_observables(night_id);
@@ -129,7 +130,7 @@ std::vector<Column> PricingSolver::solve_pricing(
                 - duals[instance_.number_of_nights() + observable.target_id];
             if (profit <= 0)
                 continue;
-            snsosp_instance.add_target(
+            snsosp_instance_builder.add_target(
                     observable.release_date,
                     observable.meridian,
                     observable.deadline,
@@ -137,6 +138,7 @@ std::vector<Column> PricingSolver::solve_pricing(
                     profit);
             snsosp2sosp_.push_back(observable_id);
         }
+        starobservationschedulingsolver::singlenightstarobservationscheduling::Instance snsosp_instance = snsosp_instance_builder.build();
 
         // Solve subproblem instance.
         starobservationschedulingsolver::singlenightstarobservationscheduling::DynamicProgrammingOptionalParameters snsosp_parameters;

@@ -54,28 +54,6 @@ public:
      * Constructors and destructor
      */
 
-    /** Constructor to build an instance manually. */
-    Instance(
-            NightId number_of_nights,
-            TargetId number_of_targets):
-        number_of_targets_(number_of_targets),
-        observables_(number_of_nights) {  }
-
-    /** Add an observable. */
-    ObservableId add_observable(
-            NightId night_id,
-            TargetId target_id,
-            Time release_date,
-            Time meridian,
-            Time deadline);
-
-    /** Add an observation time for an observable. */
-    void add_observation_time(
-            NightId night_id,
-            ObservableId observable_id,
-            Time observation_time,
-            Profit profit);
-
     /** Build an instance from a file. */
     Instance(
             std::string instance_path,
@@ -136,6 +114,9 @@ private:
      * Private methods
      */
 
+    /** Create an instance manually. */
+    Instance() { }
+
     /** Read an instance from a file in 'catusse2016' format. */
     void read_catusse2016(
             std::ifstream& file);
@@ -159,6 +140,8 @@ private:
 
     /** Sum of the profits of the targets. */
     Profit profit_sum_ = 0;
+
+    friend class InstanceBuilder;
 
 };
 

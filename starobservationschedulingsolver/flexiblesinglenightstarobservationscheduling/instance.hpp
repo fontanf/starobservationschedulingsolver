@@ -31,6 +31,9 @@ struct Target
 
     /** Profits. */
     std::vector<Profit> profits;
+
+    /** Maximum profit. */
+    Profit maximum_profit = 0;
 };
 
 /**
@@ -44,21 +47,6 @@ public:
     /*
      * Constructors and destructor
      */
-
-    /** Constructor to build an instance manually. */
-    Instance() { }
-
-    /** Add a target. */
-    TargetId add_target(
-            Time release_date,
-            Time meridian,
-            Time deadline);
-
-    /** Add an observation time for a target. */
-    void add_observation_time(
-            TargetId target_id,
-            Time observation_time,
-            Profit profit);
 
     /** Build an instance from a file. */
     Instance(
@@ -93,6 +81,9 @@ private:
      * Private methods
      */
 
+    /** Create an instance manually. */
+    Instance() { }
+
     /** Read an instance from a file in 'default' format. */
     void read_default(std::ifstream& file);
 
@@ -105,6 +96,8 @@ private:
 
     /** Total profit. */
     Profit total_profit_ = 0;
+
+    friend class InstanceBuilder;
 
 };
 

@@ -63,7 +63,7 @@ struct ColumnGenerationGreedyOutput: Output
     std::vector<std::vector<double>> x;
 };
 
-ColumnGenerationGreedyOutput column_generation_greedy(
+const ColumnGenerationGreedyOutput column_generation_greedy(
         const Instance& instance,
         ColumnGenerationOptionalParameters parameters = {});
 

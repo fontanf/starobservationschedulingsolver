@@ -22,7 +22,7 @@ inline std::ostream& operator<<(std::ostream &os, const DynamicProgrammingState&
 
 }
 
-Output starobservationschedulingsolver::flexiblesinglenightstarobservationscheduling::dynamic_programming(
+const Output starobservationschedulingsolver::flexiblesinglenightstarobservationscheduling::dynamic_programming(
         const Instance& instance,
         DynamicProgrammingOptionalParameters parameters)
 {

@@ -24,7 +24,7 @@ struct DynamicProgrammingOptionalParameters
     optimizationtools::Info info = optimizationtools::Info();
 };
 
-Output dynamic_programming(
+const Output dynamic_programming(
         const Instance& instance,
         DynamicProgrammingOptionalParameters parameters = {});
 

@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 
     // Run algorithm
 
-    Instance instance(instance_path, format);
+    const Instance instance(instance_path, format);
 
     optimizationtools::Info info = optimizationtools::Info()
         .set_verbosity_level(verbosity_level)

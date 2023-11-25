@@ -52,7 +52,7 @@ bool check(
 
 }
 
-BendersDecompositionGreedyOutput starobservationschedulingsolver::starobservationscheduling::benders_decomposition(
+const BendersDecompositionGreedyOutput starobservationschedulingsolver::starobservationscheduling::benders_decomposition(
         const Instance& instance,
         BendersDecompositionOptionalParameters parameters)
 {

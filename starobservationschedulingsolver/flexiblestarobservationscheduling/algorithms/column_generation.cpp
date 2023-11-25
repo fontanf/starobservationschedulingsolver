@@ -230,7 +230,7 @@ Solution columns2solution(
 
 }
 
-ColumnGenerationGreedyOutput starobservationschedulingsolver::flexiblestarobservationscheduling::column_generation_greedy(
+const ColumnGenerationGreedyOutput starobservationschedulingsolver::flexiblestarobservationscheduling::column_generation_greedy(
         const Instance& instance,
         ColumnGenerationOptionalParameters parameters)
 {

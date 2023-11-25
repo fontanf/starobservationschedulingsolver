@@ -24,7 +24,7 @@ struct BendersDecompositionGreedyOutput: Output
     Counter number_of_iterations = 0;
 };
 
-BendersDecompositionGreedyOutput benders_decomposition(
+const BendersDecompositionGreedyOutput benders_decomposition(
         const Instance& instance,
         BendersDecompositionOptionalParameters parameters = {});
 

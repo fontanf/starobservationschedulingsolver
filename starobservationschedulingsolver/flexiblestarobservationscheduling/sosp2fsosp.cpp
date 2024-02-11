@@ -1,6 +1,6 @@
 #include "starobservationschedulingsolver/flexiblestarobservationscheduling/utils.hpp"
 
-#include "starobservationschedulingsolver/starobservationscheduling/instance.hpp"
+#include "starobservationschedulingsolver/starobservationscheduling/instance_builder.hpp"
 
 #include <boost/program_options.hpp>
 
@@ -39,7 +39,9 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    starobservationschedulingsolver::starobservationscheduling::Instance sosp_instance(instance_path, format);
+    starobservationschedulingsolver::starobservationscheduling::InstanceBuilder sosp_instance_builder;
+    sosp_instance_builder.read(instance_path, format);
+    const starobservationschedulingsolver::starobservationscheduling::Instance sosp_instance = sosp_instance_builder.build();
     Instance instance = (vm.count("continuous"))?
             sosp2fsosp(sosp_instance, coef[0]):
             sosp2fsosp(sosp_instance, coef);

@@ -1,96 +1,18 @@
 #include "starobservationschedulingsolver/starobservationscheduling/instance.hpp"
 
-#include "starobservationschedulingsolver/starobservationscheduling/instance_builder.hpp"
-
-#include "optimizationtools/utils/utils.hpp"
 #include "optimizationtools/containers/indexed_set.hpp"
 
-#include <fstream>
 #include <iostream>
 #include <iomanip>
+#include <fstream>
 
 using namespace starobservationschedulingsolver::starobservationscheduling;
 
-Instance::Instance(
-        std::string instance_path,
-        std::string format)
-{
-    std::ifstream file(instance_path);
-    if (!file.good()) {
-        throw std::runtime_error(
-                "starobservationschedulingsolver::Instance::Instance\n"
-                "Unable to open file \"" + instance_path + "\".");
-    }
-
-    if (format == ""
-            || format == "default"
-            || format == "catusse2016") {
-        read_catusse2016(file);
-    } else {
-        throw std::invalid_argument(
-                "Unknown instance format \"" + format + "\".");
-    }
-    file.close();
-}
-
-void Instance::read_catusse2016(std::ifstream& file)
-{
-    TargetId number_of_targets;
-    NightId number_of_nights;
-    std::string null;
-    std::string line;
-
-    std::getline(file, line);
-    std::istringstream iss_m(line);
-    iss_m >> null >> null >> number_of_nights;
-
-    std::getline(file, line);
-    std::istringstream iss_n(line);
-    iss_n >> null >> null >> number_of_targets;
-
-    InstanceBuilder instance_builder(number_of_nights, number_of_targets);
-    Profit profit = -1;
-    Time observation_time = -1;
-    Time release_date = -1;
-    Time meridian = -1;
-    Time deadline = -1;
-    for (TargetId target_id = 0;
-            target_id < number_of_targets;
-            ++target_id) {
-        std::getline(file, line);
-        std::istringstream iss(line);
-        iss >> null >> null >> null >> null >> profit;
-        instance_builder.set_profit(target_id, profit);
-
-        for (NightId night_id = 0;
-                night_id < number_of_nights;
-                ++night_id) {
-            std::getline(file, line);
-            std::istringstream iss(line);
-            iss >> null >> null >> null;
-            if (iss.eof())
-                continue;
-            iss >> observation_time
-                >> null >> release_date
-                >> null >> meridian
-                >> null >> deadline;
-            instance_builder.add_observable(
-                    night_id,
-                    target_id,
-                    release_date,
-                    meridian,
-                    deadline,
-                    observation_time);
-        }
-    }
-    *this = instance_builder.build();
-}
-
-std::ostream& Instance::print(
+std::ostream& Instance::format(
         std::ostream& os,
-        int verbose) const
+        int verbosity_level) const
 {
-    if (verbose >= 1) {
+    if (verbosity_level >= 1) {
         os
             << "Number of nights:       " << number_of_nights() << std::endl
             << "Number of targets:      " << number_of_targets() << std::endl
@@ -98,7 +20,7 @@ std::ostream& Instance::print(
             ;
     }
 
-    if (verbose >= 2) {
+    if (verbosity_level >= 2) {
         os << std::endl
             << std::setw(12) << "Target"
             << std::setw(12) << "Profit"
@@ -116,7 +38,7 @@ std::ostream& Instance::print(
         }
     }
 
-    if (verbose >= 2) {
+    if (verbosity_level >= 2) {
         os << std::endl
             << std::setw(12) << "Night"
             << std::setw(12) << "Obs"
@@ -158,9 +80,9 @@ std::ostream& Instance::print(
 }
 
 std::pair<bool, Profit> Instance::check(
-        std::string certificate_path,
+        const std::string& certificate_path,
         std::ostream& os,
-        int verbose) const
+        int verbosity_level) const
 {
     std::ifstream file(certificate_path);
     if (!file.good()) {
@@ -169,7 +91,7 @@ std::pair<bool, Profit> Instance::check(
                 "Unable to open file \"" + certificate_path + "\".");
     }
 
-    if (verbose >= 2) {
+    if (verbosity_level >= 2) {
         os << std::endl
             << std::setw(12) << "Night"
             << std::setw(12) << "Observable"
@@ -206,7 +128,7 @@ std::pair<bool, Profit> Instance::check(
             // Check duplicates.
             if (targets.contains(observable.target_id)) {
                 number_of_duplicates++;
-                if (verbose >= 2) {
+                if (verbosity_level >= 2) {
                     os << "Target " << observable.target_id
                         << " has already been observed." << std::endl;
                 }
@@ -218,7 +140,7 @@ std::pair<bool, Profit> Instance::check(
             time += observable.observation_time;
             profit += this->profit(observable.target_id);
 
-            if (verbose >= 2) {
+            if (verbosity_level >= 2) {
                 os
                     << std::setw(12) << night_id
                     << std::setw(12) << observable_id
@@ -231,7 +153,7 @@ std::pair<bool, Profit> Instance::check(
             // Check deadline.
             if (time > observable.deadline) {
                 number_of_deadline_violations++;
-                if (verbose >= 2) {
+                if (verbosity_level >= 2) {
                     os << "Observation " << observable_id
                         << " ends after its deadline." << std::endl;
                 }
@@ -245,9 +167,9 @@ std::pair<bool, Profit> Instance::check(
         = (number_of_duplicates == 0)
         && (number_of_deadline_violations == 0);
 
-    if (verbose >= 2)
+    if (verbosity_level >= 2)
         os << std::endl;
-    if (verbose >= 1) {
+    if (verbosity_level >= 1) {
         os
             << "Number of obsertions:           " << targets.size() << " / " << number_of_targets()  << std::endl
             << "Number of duplicates:           " << number_of_duplicates << std::endl
@@ -257,23 +179,4 @@ std::pair<bool, Profit> Instance::check(
             ;
     }
     return {feasible, profit};
-}
-
-void starobservationschedulingsolver::starobservationscheduling::init_display(
-        const Instance& instance,
-        optimizationtools::Info& info)
-{
-    info.os()
-        << "=======================================" << std::endl
-        << "    StarObservationSchedulingSolver    " << std::endl
-        << "=======================================" << std::endl
-        << std::endl
-        << "Problem" << std::endl
-        << "-------" << std::endl
-        << "Star observation scheduling problem" << std::endl
-        << std::endl
-        << "Instance" << std::endl
-        << "--------" << std::endl;
-    instance.print(info.os(), info.verbosity_level());
-    info.os() << std::endl;
 }

@@ -1,5 +1,5 @@
 /**
- * Single-night star observation scheduling problem.
+ * Single-night star observation scheduling problem
  *
  * Input:
  * - n targets with profit wⱼ, time-window [rⱼ, dⱼ] and duration pⱼ such
@@ -16,7 +16,9 @@
 
 #pragma once
 
-#include "optimizationtools/utils/info.hpp"
+#include <cstdint>
+#include <vector>
+#include <iostream>
 
 namespace starobservationschedulingsolver
 {
@@ -27,6 +29,7 @@ using TargetId = int64_t;
 using Profit = double;
 using Time = int64_t;
 using Counter = int64_t;
+using Seed = int64_t;
 
 /**
  * Structure for a target.
@@ -58,15 +61,6 @@ class Instance
 public:
 
     /*
-     * Constructors and destructor
-     */
-
-    /** Build an instance from a file. */
-    Instance(
-            std::string instance_path,
-            std::string format = "");
-
-    /*
      * Getters
      */
 
@@ -84,9 +78,9 @@ public:
      */
 
     /** Print the instance. */
-    std::ostream& print(
+    std::ostream& format(
             std::ostream& os,
-            int verbose = 1) const;
+            int verbosity_level = 1) const;
 
 private:
 
@@ -96,9 +90,6 @@ private:
 
     /** Create an instance manually. */
     Instance() { }
-
-    /** Read an instance from a file in 'default' format. */
-    void read_default(std::ifstream& file);
 
     /*
      * Private attributes
@@ -113,10 +104,6 @@ private:
     friend class InstanceBuilder;
 
 };
-
-void init_display(
-        const Instance& instance,
-        optimizationtools::Info& info);
 
 }
 }

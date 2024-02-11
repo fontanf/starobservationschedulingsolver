@@ -13,9 +13,13 @@ class InstanceBuilder
 public:
 
     /** Constructor. */
-    InstanceBuilder(
-            NightId number_of_nights,
-            TargetId number_of_targets);
+    InstanceBuilder() { }
+
+    /** Set the number of nights. */
+    void set_number_of_nights(NightId number_of_nights);
+
+    /** Set the number of targets. */
+    void set_number_of_targets(TargetId number_of_targets);
 
     /** Add an observable. */
     void add_observable(
@@ -31,6 +35,11 @@ public:
             TargetId target_id,
             Profit profit);
 
+    /** Read an instance from a file. */
+    void read(
+            const std::string& instance_path,
+            const std::string& format);
+
     /*
      * Build
      */
@@ -39,6 +48,17 @@ public:
     Instance build();
 
 private:
+
+    /*
+     * Private methods
+     */
+
+    /*
+     * Read input file
+     */
+
+    /** Read an instance file in 'catusse2016' format. */
+    void read_catusse2016(std::ifstream& file);
 
     /*
      * Private attributes

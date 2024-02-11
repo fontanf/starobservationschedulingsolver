@@ -24,15 +24,3 @@ cc_library(
         copts = ALL_COPTS,
         visibility = ["//visibility:public"],
 )
-
-cc_library(
-        name = "algorithms",
-        hdrs = ["algorithms.hpp"],
-        srcs = ["algorithms.cpp"],
-        deps = [
-                "column_generation",
-                "benders_decomposition",
-                "@boost//:program_options",
-        ],
-        visibility = ["//visibility:public"],
-)

@@ -5,16 +5,17 @@ cc_library(
                 "instance_builder.hpp",
                 "solution.hpp",
                 "utils.hpp",
+                "algorithm_formatter.hpp",
         ],
         srcs = [
                 "instance.cpp",
                 "instance_builder.cpp",
                 "solution.cpp",
                 "utils.cpp",
+                "algorithm_formatter.cpp",
         ],
         deps = [
                 "//starobservationschedulingsolver/starobservationscheduling:starobservationschedulingsolver",
-                "@optimizationtools//optimizationtools/utils:info",
                 "@optimizationtools//optimizationtools/utils:utils",
                 "@optimizationtools//optimizationtools/containers:containers",
         ],
@@ -25,7 +26,8 @@ cc_binary(
         name = "main",
         srcs = ["main.cpp"],
         deps = [
-                "//starobservationschedulingsolver/flexiblestarobservationscheduling/algorithms:algorithms",
+                "//starobservationschedulingsolver/flexiblestarobservationscheduling/algorithms:column_generation",
+                "@boost//:program_options",
         ],
         linkopts = select({
                     "@bazel_tools//src/conditions:windows": [],
@@ -41,4 +43,3 @@ cc_binary(
                 "@boost//:program_options",
         ],
 )
-

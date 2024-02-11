@@ -41,19 +41,17 @@ namespace starobservationschedulingsolver
 namespace flexiblestarobservationscheduling
 {
 
-struct ColumnGenerationOptionalParameters
+struct ColumnGenerationOptionalParameters: Parameters
 {
-    optimizationtools::Info info = optimizationtools::Info();
-
     std::string linear_programming_solver = "CLP";
 };
 
 struct ColumnGenerationGreedyOutput: Output
 {
     ColumnGenerationGreedyOutput(
-            const Instance& instance,
-            optimizationtools::Info& info):
-        Output(instance, info) { }
+            const Instance& instance):
+        Output(instance) { }
+
 
     std::vector<double> solution;
 
@@ -62,8 +60,7 @@ struct ColumnGenerationGreedyOutput: Output
 
 const ColumnGenerationGreedyOutput column_generation_greedy(
         const Instance& instance,
-        ColumnGenerationOptionalParameters parameters = {});
+        const ColumnGenerationOptionalParameters& parameters = {});
 
 }
 }
-

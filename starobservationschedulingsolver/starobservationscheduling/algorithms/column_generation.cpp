@@ -1,10 +1,11 @@
-#include "columngenerationsolver/commons.hpp"
-
 #include "starobservationschedulingsolver/starobservationscheduling/algorithms/column_generation.hpp"
+
+#include "starobservationschedulingsolver/starobservationscheduling/algorithm_formatter.hpp"
 
 #include "starobservationschedulingsolver/singlenightstarobservationscheduling/instance_builder.hpp"
 #include "starobservationschedulingsolver/singlenightstarobservationscheduling/algorithms/dynamic_programming.hpp"
 
+#include "columngenerationsolver/commons.hpp"
 #include "columngenerationsolver/algorithms/greedy.hpp"
 
 using namespace starobservationschedulingsolver::starobservationscheduling;
@@ -12,10 +13,8 @@ using namespace starobservationschedulingsolver::starobservationscheduling;
 namespace
 {
 
-typedef columngenerationsolver::RowIdx RowIdx;
-typedef columngenerationsolver::ColIdx ColIdx;
-typedef columngenerationsolver::Value Value;
-typedef columngenerationsolver::Column Column;
+using Column = columngenerationsolver::Column;
+using Value = columngenerationsolver::Value;
 
 class PricingSolver: public columngenerationsolver::PricingSolver
 {
@@ -28,11 +27,10 @@ public:
         fixed_nights_(instance.number_of_nights())
     {  }
 
-    virtual std::vector<ColIdx> initialize_pricing(
-            const std::vector<Column>& columns,
-            const std::vector<std::pair<ColIdx, Value>>& fixed_columns);
+    virtual std::vector<std::shared_ptr<const Column>> initialize_pricing(
+            const std::vector<std::pair<std::shared_ptr<const Column>, Value>>& fixed_columns);
 
-    virtual std::vector<Column> solve_pricing(
+    virtual std::vector<std::shared_ptr<const Column>> solve_pricing(
             const std::vector<Value>& duals);
 
 private:
@@ -40,59 +38,73 @@ private:
     const Instance& instance_;
 
     std::vector<int8_t> fixed_targets_;
+
     std::vector<int8_t> fixed_nights_;
 
     std::vector<TargetId> snsosp2sosp_;
 
 };
 
-columngenerationsolver::Parameters get_parameters(const Instance& instance)
+columngenerationsolver::Model get_model(
+        const Instance& instance)
 {
-    NightId m = instance.number_of_nights();
-    TargetId n = instance.number_of_targets();
-    columngenerationsolver::Parameters p(m + n);
+    columngenerationsolver::Model model;
 
-    p.objective_sense = columngenerationsolver::ObjectiveSense::Max;
-    p.column_lower_bound = 0;
-    p.column_upper_bound = 1;
-    // Row lower bounds.
-    std::fill(p.row_lower_bounds.begin(), p.row_lower_bounds.begin() + m, 0);
-    std::fill(p.row_lower_bounds.begin() + m, p.row_lower_bounds.end(), 0);
-    // Row upper bounds.
-    std::fill(p.row_upper_bounds.begin(), p.row_upper_bounds.begin() + m, 1);
-    std::fill(p.row_upper_bounds.begin() + m, p.row_upper_bounds.end(), 1);
-    // Row coefficent lower bounds.
-    std::fill(p.row_coefficient_lower_bounds.begin(), p.row_coefficient_lower_bounds.end(), 0);
-    // Row coefficent upper bounds.
-    std::fill(p.row_coefficient_upper_bounds.begin(), p.row_coefficient_upper_bounds.end(), 1);
+    model.objective_sense = optimizationtools::ObjectiveDirection::Maximize;
+    model.column_lower_bound = 0;
+    model.column_upper_bound = 1;
+
+    // Rows.
+    // Not more than 1 schedule selected for each night.
+    for (NightId night_id = 0;
+            night_id < instance.number_of_nights();
+            ++night_id) {
+        columngenerationsolver::Row row;
+        row.lower_bound = 0;
+        row.upper_bound = 1;
+        row.coefficient_lower_bound = 0;
+        row.coefficient_upper_bound = 1;
+        model.rows.push_back(row);
+    }
+    // Each target selected at most once.
+    for (TargetId target_id = 0;
+            target_id < instance.number_of_targets();
+            ++target_id) {
+        columngenerationsolver::Row row;
+        row.lower_bound = 0;
+        row.upper_bound = 1;
+        row.coefficient_lower_bound = 0;
+        row.coefficient_upper_bound = 1;
+        model.rows.push_back(row);
+    }
+
     // Dummy column objective coefficient.
-    p.dummy_column_objective_coefficient = -instance.total_profit();
+    model.dummy_column_objective_coefficient = -instance.total_profit();
+
     // Pricing solver.
-    p.pricing_solver = std::unique_ptr<columngenerationsolver::PricingSolver>(
+    model.pricing_solver = std::unique_ptr<columngenerationsolver::PricingSolver>(
             new PricingSolver(instance));
-    return p;
+
+    return model;
 }
 
-std::vector<ColIdx> PricingSolver::initialize_pricing(
-            const std::vector<Column>& columns,
-            const std::vector<std::pair<ColIdx, Value>>& fixed_columns)
+std::vector<std::shared_ptr<const Column>> PricingSolver::initialize_pricing(
+            const std::vector<std::pair<std::shared_ptr<const Column>, Value>>& fixed_columns)
 {
     std::fill(fixed_targets_.begin(), fixed_targets_.end(), -1);
     std::fill(fixed_nights_.begin(), fixed_nights_.end(), -1);
     for (auto p: fixed_columns) {
-        const Column& column = columns[p.first];
+        const Column& column = *(p.first);
         Value value = p.second;
         if (value < 0.5)
             continue;
-        for (RowIdx row_pos = 0; row_pos < (RowIdx)column.row_indices.size(); ++row_pos) {
-            RowIdx row_index = column.row_indices[row_pos];
-            Value row_coefficient = column.row_coefficients[row_pos];
-            if (row_coefficient < 0.5)
+        for (const columngenerationsolver::LinearTerm& element: column.elements) {
+            if (element.coefficient < 0.5)
                 continue;
-            if (row_index < instance_.number_of_nights()) {
-                fixed_nights_[row_index] = 1;
+            if (element.row < instance_.number_of_nights()) {
+                fixed_nights_[element.row] = 1;
             } else {
-                fixed_targets_[row_index - instance_.number_of_nights()] = 1;
+                fixed_targets_[element.row - instance_.number_of_nights()] = 1;
             }
         }
     }
@@ -106,10 +118,10 @@ struct ColumnExtra
     std::vector<ObservableId> snsosp2sosp;
 };
 
-std::vector<Column> PricingSolver::solve_pricing(
+std::vector<std::shared_ptr<const Column>> PricingSolver::solve_pricing(
             const std::vector<Value>& duals)
 {
-    std::vector<Column> columns;
+    std::vector<std::shared_ptr<const Column>> columns;
     for (NightId night_id = 0;
             night_id < instance_.number_of_nights();
             ++night_id) {
@@ -142,7 +154,7 @@ std::vector<Column> PricingSolver::solve_pricing(
 
         // Solve subproblem instance.
         starobservationschedulingsolver::singlenightstarobservationscheduling::DynamicProgrammingOptionalParameters snsosp_parameters;
-        //snsosp_parameters.info.set_verbosity_level(1);
+        snsosp_parameters.verbosity_level = 0;
         auto snsosp_output = starobservationschedulingsolver::singlenightstarobservationscheduling::dynamic_programming(
                 snsosp_instance,
                 snsosp_parameters);
@@ -152,35 +164,38 @@ std::vector<Column> PricingSolver::solve_pricing(
 
         // Retrieve column.
         Column column;
-        column.row_indices.push_back(night_id);
-        column.row_coefficients.push_back(1);
+        columngenerationsolver::LinearTerm element;
+        element.row = night_id;
+        element.coefficient = 1;
+        column.elements.push_back(element);
         for (starobservationschedulingsolver::singlenightstarobservationscheduling::TargetId snsosp_observation_pos = 0;
                 snsosp_observation_pos < snsosp_output.solution.number_of_observations();
                 ++snsosp_observation_pos) {
             const auto& snsosp_observation = snsosp_output.solution.observation(snsosp_observation_pos);
             ObservableId observable_id = snsosp2sosp_[snsosp_observation.target_id];
             const Observable& observable = instance_.observable(night_id, observable_id);
-            column.row_indices.push_back(
-                    instance_.number_of_nights() + observable.target_id);
-            column.row_coefficients.push_back(1);
+            columngenerationsolver::LinearTerm element;
+            element.row = instance_.number_of_nights() + observable.target_id;
+            element.coefficient = 1;
+            column.elements.push_back(element);
             column.objective_coefficient += instance_.profit(observable.target_id);
         }
         // Extra.
         ColumnExtra extra {night_id, snsosp_output.solution, snsosp2sosp_};
         column.extra = std::shared_ptr<void>(new ColumnExtra(extra));
-        columns.push_back(column);
+        columns.push_back(std::shared_ptr<const Column>(new Column(column)));
     }
     return columns;
 }
 
 Solution columns2solution(
         const Instance& instance,
-        const std::vector<std::pair<Column, Value>>& columns)
+        const columngenerationsolver::Solution& cg_solution)
 {
     std::vector<std::vector<std::pair<ObservableId, Time>>> sol(instance.number_of_nights());
-    for (const auto& colval: columns) {
+    for (const auto& colval: cg_solution.columns()) {
         std::shared_ptr<ColumnExtra> extra
-            = std::static_pointer_cast<ColumnExtra>(colval.first.extra);
+            = std::static_pointer_cast<ColumnExtra>(colval.first->extra);
         for (starobservationschedulingsolver::singlenightstarobservationscheduling::TargetId snsosp_observation_pos = 0;
                 snsosp_observation_pos < extra->snsosp_solution.number_of_observations();
                 ++snsosp_observation_pos) {
@@ -212,40 +227,34 @@ Solution columns2solution(
 
 const ColumnGenerationGreedyOutput starobservationschedulingsolver::starobservationscheduling::column_generation_greedy(
         const Instance& instance,
-        ColumnGenerationOptionalParameters parameters)
+        const ColumnGenerationOptionalParameters& parameters)
 {
-    init_display(instance, parameters.info);
-    parameters.info.os()
-            << "Algorithm" << std::endl
-            << "---------" << std::endl
-            << "Column generation heuristic - greedy" << std::endl
-            << std::endl
-            << "Parameters" << std::endl
-            << "----------" << std::endl
-            << "Linear programming solver:  " << parameters.linear_programming_solver << std::endl
-            << std::endl;
+    ColumnGenerationGreedyOutput output(instance);
+    AlgorithmFormatter algorithm_formatter(parameters, output);
+    algorithm_formatter.start("Column generation heuristic - greedy");
+    algorithm_formatter.print_header();
 
-    ColumnGenerationGreedyOutput output(instance, parameters.info);
+    columngenerationsolver::Model model = get_model(instance);
+    columngenerationsolver::GreedyParameters greedy_parameters;
+    greedy_parameters.timer = parameters.timer;
+    greedy_parameters.verbosity_level = 0;
+    greedy_parameters.new_solution_callback = [&instance, &algorithm_formatter](
+            const columngenerationsolver::Output& cgs_output)
+    {
+        Profit bound = std::ceil(cgs_output.bound - FFOT_TOL);
+        algorithm_formatter.update_bound(bound, "");
 
-    columngenerationsolver::Parameters p = get_parameters(instance);
-    columngenerationsolver::GreedyOptionalParameters op;
-    op.info.set_time_limit(parameters.info.remaining_time());
-    op.column_generation_parameters.linear_programming_solver
+        if (cgs_output.solution.feasible()) {
+            Solution solution = columns2solution(instance, cgs_output.solution);
+            algorithm_formatter.update_solution(solution, "");
+        }
+    };
+    greedy_parameters.column_generation_parameters.linear_programming_solver
         = columngenerationsolver::s2lps(parameters.linear_programming_solver);
-    auto greedy_output = columngenerationsolver::greedy(p, op);
+    auto greedy_output = columngenerationsolver::greedy(
+            model,
+            greedy_parameters);
 
-    output.update_bound(
-            std::ceil(greedy_output.bound - FFOT_TOL),
-            std::stringstream(""),
-            parameters.info);
-    if (greedy_output.solution.size() > 0) {
-        output.update_solution(
-                columns2solution(instance, greedy_output.solution),
-                std::stringstream(""),
-                parameters.info);
-    }
-
-    output.algorithm_end(parameters.info);
+    algorithm_formatter.end();
     return output;
 }
-

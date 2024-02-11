@@ -7,14 +7,3 @@ cc_library(
         ],
         visibility = ["//visibility:public"],
 )
-
-cc_library(
-        name = "algorithms",
-        hdrs = ["algorithms.hpp"],
-        srcs = ["algorithms.cpp"],
-        deps = [
-                ":dynamic_programming",
-                "@boost//:program_options",
-        ],
-        visibility = ["//visibility:public"],
-)

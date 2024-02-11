@@ -1,5 +1,7 @@
 #include "starobservationschedulingsolver/singlenightstarobservationscheduling/algorithms/dynamic_programming.hpp"
 
+#include "starobservationschedulingsolver/singlenightstarobservationscheduling/algorithm_formatter.hpp"
+
 using namespace starobservationschedulingsolver::singlenightstarobservationscheduling;
 
 namespace
@@ -13,26 +15,26 @@ struct DynamicProgrammingState
     DynamicProgrammingState* prev;
 };
 
-inline std::ostream& operator<<(std::ostream &os, const DynamicProgrammingState& s)
+/*
+inline std::ostream& operator<<(
+        std::ostream& os,
+        const DynamicProgrammingState& s)
 {
     os << "time " << s.time << " profit " << s.profit;
     return os;
 }
+*/
 
 }
 
 const Output starobservationschedulingsolver::singlenightstarobservationscheduling::dynamic_programming(
         const Instance& instance,
-        DynamicProgrammingOptionalParameters parameters)
+        const DynamicProgrammingOptionalParameters& parameters)
 {
-    init_display(instance, parameters.info);
-    parameters.info.os()
-        << "Algorithm" << std::endl
-        << "---------" << std::endl
-        << "Dynamic programming" << std::endl
-        << std::endl;
-
-    Output output(instance, parameters.info);
+    Output output(instance);
+    AlgorithmFormatter algorithm_formatter(parameters, output);
+    algorithm_formatter.start("Dynamic programming");
+    algorithm_formatter.print_header();
 
     Solution solution(instance);
     //std::cout << "n " << n << std::endl;
@@ -135,8 +137,9 @@ const Output starobservationschedulingsolver::singlenightstarobservationscheduli
                 state->time - instance.target(state->target_id).observation_time);
     }
 
-    output.update_solution(solution, std::stringstream(""), parameters.info);
-    output.update_bound(solution.profit(), std::stringstream(""), parameters.info);
+    algorithm_formatter.update_solution(solution, "");
+    algorithm_formatter.update_bound(solution.profit(), "");
 
-    return output.algorithm_end(parameters.info);
+    algorithm_formatter.end();
+    return output;
 }

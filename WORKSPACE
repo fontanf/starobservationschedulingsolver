@@ -34,13 +34,13 @@ cc_library(
 git_repository(
     name = "optimizationtools",
     remote = "https://github.com/fontanf/optimizationtools.git",
-    commit = "e9f078f5d20dccd8f029c2a09a9d5c008e3251f8",
+    commit = "9c47813badb03c9b46c5f7c3e60a8b5f8647ac5b",
 )
 
 git_repository(
     name = "columngenerationsolver",
     remote = "https://github.com/fontanf/columngenerationsolver.git",
-    commit = "8e79ac66ba7c9e24f75f27822f59cb2c0555f35d",
+    commit = "56d84cde75a222f64e4eae5f37b57427e429f4b1",
 )
 
 local_repository(

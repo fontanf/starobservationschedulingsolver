@@ -1,4 +1,8 @@
+#ifdef XPRESS_FOUND
+
 #include "starobservationschedulingsolver/starobservationscheduling/algorithms/benders_decomposition.hpp"
+
+#include "starobservationschedulingsolver/starobservationscheduling/algorithm_formatter.hpp"
 
 #include <xprs.h>
 
@@ -54,22 +58,18 @@ bool check(
 
 const BendersDecompositionGreedyOutput starobservationschedulingsolver::starobservationscheduling::benders_decomposition(
         const Instance& instance,
-        BendersDecompositionOptionalParameters parameters)
+        const BendersDecompositionOptionalParameters& parameters)
 {
-    init_display(instance, parameters.info);
-    parameters.info.os()
-            << "Algorithm" << std::endl
-            << "---------" << std::endl
-            << "Benders decomposition" << std::endl
-            << std::endl;
-
-    BendersDecompositionGreedyOutput output(instance, parameters.info);
+    BendersDecompositionGreedyOutput output(instance);
+    AlgorithmFormatter algorithm_formatter(parameters, output);
+    algorithm_formatter.start("Benders decomposition");
+    algorithm_formatter.print_header();
 
     // Initialize Xpress.
     auto rc = XPRSinit(NULL);
     if (rc) {
         std::cout << "Problem with XPRSinit\n" << std::endl;
-        output.algorithm_end(parameters.info);
+        algorithm_formatter.end();
         return output;
     }
 
@@ -261,10 +261,7 @@ const BendersDecompositionGreedyOutput starobservationschedulingsolver::starobse
         XPRSgetdblattrib(xpress_problem, XPRS_BESTBOUND, &xpress_bound_value);
         std::stringstream ss;
         ss << "iteration " << output.number_of_iterations;
-        output.update_bound(
-                xpress_bound_value,
-                ss,
-                parameters.info);
+        algorithm_formatter.update_bound(xpress_bound_value, ss.str());
 
         // Retrieve MILP solution.
         bool ok = true;
@@ -374,10 +371,7 @@ const BendersDecompositionGreedyOutput starobservationschedulingsolver::starobse
         { // Update best solution.
             std::stringstream ss;
             ss << "iteration " << output.number_of_iterations;
-            output.update_solution(
-                    solution,
-                    ss,
-                    parameters.info);
+            algorithm_formatter.update_solution(solution, ss.str());
         }
         if (output.bound == output.solution.profit())
             break;
@@ -390,6 +384,8 @@ const BendersDecompositionGreedyOutput starobservationschedulingsolver::starobse
     XPRSdestroyprob(xpress_problem);
     XPRSfree();
 
-    output.algorithm_end(parameters.info);
+    algorithm_formatter.end();
     return output;
 }
+
+#endif

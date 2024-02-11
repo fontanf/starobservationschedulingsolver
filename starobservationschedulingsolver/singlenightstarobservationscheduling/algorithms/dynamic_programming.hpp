@@ -18,15 +18,13 @@ namespace starobservationschedulingsolver
 namespace singlenightstarobservationscheduling
 {
 
-struct DynamicProgrammingOptionalParameters
+struct DynamicProgrammingOptionalParameters: Parameters
 {
-    /** Info structure. */
-    optimizationtools::Info info = optimizationtools::Info();
 };
 
 const Output dynamic_programming(
         const Instance& instance,
-        DynamicProgrammingOptionalParameters parameters = {});
+        const DynamicProgrammingOptionalParameters& parameters = {});
 
 }
 }

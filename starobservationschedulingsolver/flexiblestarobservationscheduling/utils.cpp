@@ -8,9 +8,9 @@ Instance starobservationschedulingsolver::flexiblestarobservationscheduling::sos
         const starobservationschedulingsolver::starobservationscheduling::Instance& sosp_instance,
         const std::vector<double>& coefs)
 {
-    InstanceBuilder instance_builder(
-            sosp_instance.number_of_nights(),
-            sosp_instance.number_of_targets());
+    InstanceBuilder instance_builder;
+    instance_builder.set_number_of_nights(sosp_instance.number_of_nights());
+    instance_builder.set_number_of_targets(sosp_instance.number_of_targets());
 
     for (NightId night_id = 0;
             night_id < sosp_instance.number_of_nights();
@@ -55,9 +55,9 @@ Instance starobservationschedulingsolver::flexiblestarobservationscheduling::sos
         const starobservationschedulingsolver::starobservationscheduling::Instance& sosp_instance,
         double coef)
 {
-    InstanceBuilder instance_builder(
-            sosp_instance.number_of_nights(),
-            sosp_instance.number_of_targets());
+    InstanceBuilder instance_builder;
+    instance_builder.set_number_of_nights(sosp_instance.number_of_nights());
+    instance_builder.set_number_of_targets(sosp_instance.number_of_targets());
 
     for (NightId night_id = 0;
             night_id < sosp_instance.number_of_nights();

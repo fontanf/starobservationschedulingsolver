@@ -20,7 +20,9 @@
 
 #pragma once
 
-#include "optimizationtools/utils/info.hpp"
+#include <cstdint>
+#include <string>
+#include <vector>
 
 namespace starobservationschedulingsolver
 {
@@ -34,6 +36,7 @@ using ObservablePos = int64_t;
 using Profit = double;
 using Time = int64_t;
 using Counter = int64_t;
+using Seed = int64_t;
 
 /**
  * Structure for an observable.
@@ -63,15 +66,6 @@ class Instance
 {
 
 public:
-
-    /*
-     * Constructors and destructor
-     */
-
-    /** Build an instance from a file. */
-    Instance(
-            std::string instance_path,
-            std::string format = "");
 
     /*
      * Getters
@@ -108,9 +102,9 @@ public:
      */
 
     /** Print the instance. */
-    std::ostream& print(
+    std::ostream& format(
             std::ostream& os,
-            int verbose = 1) const;
+            int verbosity_level = 1) const;
 
     /*
      * Checkers
@@ -118,9 +112,9 @@ public:
 
     /** Check a certificate. */
     std::pair<bool, Profit> check(
-            std::string certificate_path,
+            const std::string& certificate_path,
             std::ostream& os,
-            int verbose = 1) const;
+            int verbosity_level = 1) const;
 
 private:
 
@@ -130,9 +124,6 @@ private:
 
     /** Create an instance manually. */
     Instance() { }
-
-    /** Read an instance from a file in 'catusse2016' format. */
-    void read_catusse2016(std::ifstream& file);
 
     /*
      * Private attributes
@@ -157,10 +148,6 @@ private:
     friend class InstanceBuilder;
 
 };
-
-void init_display(
-        const Instance& instance,
-        optimizationtools::Info& info);
 
 }
 }

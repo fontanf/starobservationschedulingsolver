@@ -27,6 +27,10 @@ public:
             Time observation_time,
             Profit profit);
 
+    /** Read an instance from a file. */
+    void read(
+            const std::string& instance_path,
+            const std::string& format);
 
     /*
      * Build
@@ -36,6 +40,17 @@ public:
     Instance build();
 
 private:
+
+    /*
+     * Private methods
+     */
+
+    /*
+     * Read input file
+     */
+
+    /** Read an instance from a file in 'default' format. */
+    void read_default(std::ifstream& file);
 
     /*
      * Private attributes

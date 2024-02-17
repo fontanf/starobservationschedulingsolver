@@ -78,9 +78,6 @@ columngenerationsolver::Model get_model(
         model.rows.push_back(row);
     }
 
-    // Dummy column objective coefficient.
-    model.dummy_column_objective_coefficient = -instance.total_profit();
-
     // Pricing solver.
     model.pricing_solver = std::unique_ptr<columngenerationsolver::PricingSolver>(
             new PricingSolver(instance));

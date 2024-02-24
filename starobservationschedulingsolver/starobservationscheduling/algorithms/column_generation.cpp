@@ -51,8 +51,6 @@ columngenerationsolver::Model get_model(
     columngenerationsolver::Model model;
 
     model.objective_sense = optimizationtools::ObjectiveDirection::Maximize;
-    model.column_lower_bound = 0;
-    model.column_upper_bound = 1;
 
     // Rows.
     // Not more than 1 schedule selected for each night.

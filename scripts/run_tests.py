@@ -32,7 +32,7 @@ for instance in star_observation_scheduling_data:
     if not os.path.exists(os.path.dirname(json_output_path)):
         os.makedirs(os.path.dirname(json_output_path))
     command = (
-            starobservationscheduling_main
+            star_observation_scheduling_main
             + "  --verbosity-level 1"
             + "  --input \"" + instance_path + "\""
             + "  --algorithm column-generation"

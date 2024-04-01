@@ -2,10 +2,12 @@ import gdown
 import os
 import pathlib
 
-gdown.download(id="1RzBH4LWSqHGdE-0SIpZZCluV6MLZ6b4f")
-os.system("7z x star_observation_scheduling.7z -odata")
-pathlib.Path("star_observation_scheduling.7z").unlink()
 
-gdown.download(id="1ag21EFO0VzZlUccjTSVJ9tlT0uh7DbkS")
-os.system("7z x flexible_star_observation_scheduling.7z -odata")
-pathlib.Path("flexible_star_observation_scheduling.7z").unlink()
+def download(id):
+    gdown.download(id=id, output="data.7z")
+    os.system("7z x data.7z -odata")
+    pathlib.Path("data.7z").unlink()
+
+
+download("1RzBH4LWSqHGdE-0SIpZZCluV6MLZ6b4f")
+download("1ag21EFO0VzZlUccjTSVJ9tlT0uh7DbkS")

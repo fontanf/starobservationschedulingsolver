@@ -3,7 +3,7 @@ import os
 
 test_results_directory = sys.argv[1]
 
-starobservationscheduling_data = [
+star_observation_scheduling_data = [
         os.path.join("catusse2016", "ins_400_71_1"),
         os.path.join("catusse2016", "ins_400_71_2"),
         os.path.join("catusse2016", "ins_400_71_3"),
@@ -15,12 +15,12 @@ starobservationscheduling_data = [
         os.path.join("catusse2016", "ins_600_107_4"),
         os.path.join("catusse2016", "ins_600_107_5"),
         os.path.join("catusse2016", "real.txt")]
-starobservationscheduling_main = os.path.join(
+star_observation_scheduling_main = os.path.join(
         "bazel-bin",
         "starobservationschedulingsolver",
         "star_observation_scheduling",
         "main")
-for instance in starobservationscheduling_data:
+for instance in star_observation_scheduling_data:
     instance_path = os.path.join(
             "data",
             "star_observation_scheduling",
@@ -41,7 +41,7 @@ for instance in starobservationscheduling_data:
     os.system(command)
     print()
 
-starobservationscheduling_data = [
+flexible_star_observation_scheduling_data = [
         os.path.join("catusse2016_discrete_80", "ins_400_71_1"),
         os.path.join("catusse2016_discrete_80", "ins_400_71_2"),
         os.path.join("catusse2016_discrete_80", "ins_400_71_3"),
@@ -57,7 +57,7 @@ flexible_star_observation_scheduling_main = os.path.join(
         "starobservationschedulingsolver",
         "flexible_star_observation_scheduling",
         "main")
-for instance in starobservationscheduling_data:
+for instance in flexible_star_observation_scheduling_data:
     instance_path = os.path.join(
             "data",
             "flexible_star_observation_scheduling",

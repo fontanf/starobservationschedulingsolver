@@ -43,7 +43,7 @@ if args.tests is None or "star-observation-scheduling-column-generation" in args
                 "star_observation_scheduling",
                 instance)
         json_output_path = os.path.join(
-                test_results_directory,
+                args.directory,
                 "star_observation_scheduling",
                 instance + ".json")
         if not os.path.exists(os.path.dirname(json_output_path)):
@@ -90,7 +90,7 @@ if args.tests is None or "flexible-star-observation-scheduling-column-generation
                 "flexible_star_observation_scheduling",
                 instance)
         json_output_path = os.path.join(
-                test_results_directory,
+                args.directory,
                 "flexible_star_observation_scheduling",
                 instance)
         if not os.path.exists(os.path.dirname(json_output_path)):

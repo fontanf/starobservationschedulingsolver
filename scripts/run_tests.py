@@ -55,7 +55,9 @@ if args.tests is None or "star-observation-scheduling-column-generation" in args
                 + "  --algorithm column-generation"
                 + "  --output \"" + json_output_path + "\"")
         print(command)
-        os.system(command)
+        status = os.system(command)
+        if status != 0:
+            sys.exit(1)
         print()
     print()
     print()
@@ -102,7 +104,9 @@ if args.tests is None or "flexible-star-observation-scheduling-column-generation
                 + "  --algorithm column-generation"
                 + "  --output \"" + json_output_path + "\"")
         print(command)
-        os.system(command)
+        status = os.system(command)
+        if status != 0:
+            sys.exit(1)
         print()
     print()
     print()

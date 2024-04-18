@@ -39,7 +39,7 @@ if args.tests is None or "star-observation-scheduling-column-generation" in args
             os.path.join("catusse2016", "real.txt")]
     for instance in data:
         instance_path = os.path.join(
-                star_observation_scheduling_data
+                star_observation_scheduling_data,
                 instance)
         json_output_path = os.path.join(
                 args.directory,

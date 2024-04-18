@@ -13,11 +13,11 @@ parser.add_argument(
 args = parser.parse_args()
 
 
+star_observation_scheduling_data = os.environ['STAR_OBSERVATION_SCHEDULING_DATA']
 star_observation_scheduling_main = os.path.join(
-        "bazel-bin",
-        "starobservationschedulingsolver",
-        "star_observation_scheduling",
-        "main")
+        "install",
+        "bin",
+        "starobservationschedulingsolver_star_observation_scheduling")
 
 
 if args.tests is None or "star-observation-scheduling-column-generation" in args.tests:
@@ -25,7 +25,7 @@ if args.tests is None or "star-observation-scheduling-column-generation" in args
     print("-------------------------------------------------------")
     print()
 
-    star_observation_scheduling_column_generation_data = [
+    data = [
             os.path.join("catusse2016", "ins_400_71_1"),
             os.path.join("catusse2016", "ins_400_71_2"),
             os.path.join("catusse2016", "ins_400_71_3"),
@@ -37,10 +37,9 @@ if args.tests is None or "star-observation-scheduling-column-generation" in args
             os.path.join("catusse2016", "ins_600_107_4"),
             os.path.join("catusse2016", "ins_600_107_5"),
             os.path.join("catusse2016", "real.txt")]
-    for instance in star_observation_scheduling_column_generation_data:
+    for instance in data:
         instance_path = os.path.join(
-                "data",
-                "star_observation_scheduling",
+                star_observation_scheduling_data
                 instance)
         json_output_path = os.path.join(
                 args.directory,
@@ -63,11 +62,11 @@ if args.tests is None or "star-observation-scheduling-column-generation" in args
     print()
 
 
+flexible_star_observation_scheduling_data = os.environ['FLEXIBLE_STAR_OBSERVATION_SCHEDULING_DATA']
 flexible_star_observation_scheduling_main = os.path.join(
-        "bazel-bin",
-        "starobservationschedulingsolver",
-        "flexible_star_observation_scheduling",
-        "main")
+        "install",
+        "bin",
+        "starobservationschedulingsolver_flexible_star_observation_scheduling")
 
 
 if args.tests is None or "flexible-star-observation-scheduling-column-generation" in args.tests:
@@ -75,7 +74,7 @@ if args.tests is None or "flexible-star-observation-scheduling-column-generation
     print("--------------------------------------------------------")
     print()
 
-    flexible_star_observation_scheduling_column_generation_data = [
+    data = [
             os.path.join("catusse2016_discrete_80", "ins_400_71_1"),
             os.path.join("catusse2016_discrete_80", "ins_400_71_2"),
             os.path.join("catusse2016_discrete_80", "ins_400_71_3"),
@@ -86,10 +85,9 @@ if args.tests is None or "flexible-star-observation-scheduling-column-generation
             os.path.join("catusse2016_discrete_85", "ins_400_71_3"),
             os.path.join("catusse2016_discrete_85", "ins_400_71_4"),
             os.path.join("catusse2016_discrete_85", "ins_400_71_5")]
-    for instance in flexible_star_observation_scheduling_column_generation_data:
+    for instance in data:
         instance_path = os.path.join(
-                "data",
-                "flexible_star_observation_scheduling",
+                flexible_star_observation_scheduling_data,
                 instance)
         json_output_path = os.path.join(
                 args.directory,

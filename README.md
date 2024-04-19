@@ -73,6 +73,11 @@ Compile:
 bazel build -- //...
 ```
 
+Download data:
+```shell
+python3 scripts/download_data.py
+```
+
 Examples:
 
 ```shell

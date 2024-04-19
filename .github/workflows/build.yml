@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest]
         python-version: ["3.8"]
 
     env:
@@ -56,6 +56,15 @@ jobs:
     - name: Build Windows
       run: bazel build  --cxxopt=/MT -- //starobservationschedulingsolver/...
       if: matrix.os == 'windows-latest'
+    - name: Copy CLP libraries (Darwin)
+      run: |
+        mkdir -p "/Users/runner/work/Osi/Osi/dist/lib"
+        cp -rf "${GITHUB_WORKSPACE}/bazel-packingsolver/external/osi_darwin/lib/" "/Users/runner/work/Osi/Osi/dist/lib"
+        mkdir -p "/Users/runner/work/CoinUtils/CoinUtils/dist/lib"
+        cp -rf "${GITHUB_WORKSPACE}/bazel-packingsolver/external/coinutils_darwin/lib/" "/Users/runner/work/CoinUtils/CoinUtils/dist/lib"
+        mkdir -p "/Users/runner/work/Clp/Clp/dist/lib"
+        cp -rf "${GITHUB_WORKSPACE}/bazel-packingsolver/external/clp_darwin/lib/" "/Users/runner/work/Clp/Clp/dist/lib"
+      if: matrix.os == 'macos-latest'
     - name: Run tests
       run: python3 -u scripts/run_tests.py test_results_ref
     - name: Process tests

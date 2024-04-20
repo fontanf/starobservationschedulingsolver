@@ -1,0 +1,4 @@
+add_subdirectory(flexible_single_night_star_observation_scheduling)
+add_subdirectory(flexible_star_observation_scheduling)
+add_subdirectory(single_night_star_observation_scheduling)
+add_subdirectory(star_observation_scheduling)

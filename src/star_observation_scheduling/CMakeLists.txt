@@ -1,0 +1,22 @@
+add_library(StarObservationSchedulingSolver_star_observation_scheduling)
+target_sources(StarObservationSchedulingSolver_star_observation_scheduling PRIVATE
+    instance.cpp
+    instance_builder.cpp
+    solution.cpp
+    algorithm_formatter.cpp)
+target_include_directories(StarObservationSchedulingSolver_star_observation_scheduling PUBLIC
+    ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(StarObservationSchedulingSolver_star_observation_scheduling PUBLIC
+    OptimizationTools::utils)
+add_library(StarObservationSchedulingSolver::star_observation_scheduling ALIAS StarObservationSchedulingSolver_star_observation_scheduling)
+
+add_subdirectory(algorithms)
+
+add_executable(StarObservationSchedulingSolver_star_observation_scheduling_main)
+target_sources(StarObservationSchedulingSolver_star_observation_scheduling_main PRIVATE
+    main.cpp)
+target_link_libraries(StarObservationSchedulingSolver_star_observation_scheduling_main PUBLIC
+    StarObservationSchedulingSolver_star_observation_scheduling_column_generation
+    Boost::program_options)
+set_target_properties(StarObservationSchedulingSolver_star_observation_scheduling_main PROPERTIES OUTPUT_NAME "starobservationschedulingsolver_star_observation_scheduling")
+install(TARGETS StarObservationSchedulingSolver_star_observation_scheduling_main)

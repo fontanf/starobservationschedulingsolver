@@ -5,6 +5,6 @@ include(FetchContent)
 FetchContent_Declare(
     columngenerationsolver
     GIT_REPOSITORY https://github.com/fontanf/columngenerationsolver.git
-    GIT_TAG 32561f17c6fa7100b2dedb5d397dab1a03c9db2c)
+    GIT_TAG 9c57300135f8d1ec2a44de4aeb53e0056d24f2f3)
     #SOURCE_DIR "${PROJECT_SOURCE_DIR}/../columngenerationsolver/")
 FetchContent_MakeAvailable(columngenerationsolver)

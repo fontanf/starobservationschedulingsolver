@@ -164,13 +164,13 @@ std::vector<std::shared_ptr<const Column>> PricingSolver::solve_pricing(
         starobservationschedulingsolver::single_night_star_observation_scheduling::InstanceBuilder snsosp_instance_builder;
         snsosp2sosp_.clear();
         for (ObservableId observable_id = 0;
-                observable_id < instance_.number_of_observables(night_id);
+                observable_id < (ObservableId)instance_.night(night_id).observables.size();
                 ++observable_id) {
             const Observable& observable = instance_.observable(night_id, observable_id);
             if (fixed_targets_[observable.target_id] == 1)
                 continue;
             starobservationschedulingsolver::single_night_star_observation_scheduling::Profit profit
-                = (starobservationschedulingsolver::single_night_star_observation_scheduling::Profit)instance_.profit(observable.target_id)
+                = (starobservationschedulingsolver::single_night_star_observation_scheduling::Profit)instance_.target(observable.target_id).profit
                 - duals[instance_.number_of_nights() + observable.target_id];
             if (profit <= 0)
                 continue;
@@ -210,7 +210,7 @@ std::vector<std::shared_ptr<const Column>> PricingSolver::solve_pricing(
             element.row = instance_.number_of_nights() + observable.target_id;
             element.coefficient = 1;
             column.elements.push_back(element);
-            column.objective_coefficient += instance_.profit(observable.target_id);
+            column.objective_coefficient += instance_.target(observable.target_id).profit;
         }
         // Extra.
         ColumnExtra extra {night_id, snsosp_output.solution, snsosp2sosp_};

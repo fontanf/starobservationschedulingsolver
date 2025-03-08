@@ -81,7 +81,7 @@ python3 scripts/download_data.py
 Examples:
 
 ```shell
-./bazel-bin/starobservationschedulingsolver/starobservationscheduling/main -v 1 -i ./data/starobservationscheduling/catusse2016/real.txt -a column-generation -c solution.txt
+./install/bin/starobservationschedulingsolver_star_observation_scheduling  -v 1  -i ./data/star_observation_scheduling/catusse2016/real.txt  -a column-generation  -c solution.txt
 ```
 ```
 =======================================

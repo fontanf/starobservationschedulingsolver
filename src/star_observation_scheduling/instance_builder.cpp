@@ -8,13 +8,13 @@ using namespace starobservationschedulingsolver::star_observation_scheduling;
 void InstanceBuilder::set_number_of_nights(
         NightId number_of_nights)
 {
-    instance_.observables_ = std::vector<std::vector<Observable>>(number_of_nights);
+    instance_.nights_ = std::vector<Night>(number_of_nights);
 }
 
 void InstanceBuilder::set_number_of_targets(
         TargetId number_of_targets)
 {
-    instance_.profits_ = std::vector<Profit>(number_of_targets, 0);
+    instance_.targets_ = std::vector<Target>(number_of_targets);
 }
 
 void InstanceBuilder::add_observable(
@@ -25,20 +25,28 @@ void InstanceBuilder::add_observable(
         Time deadline,
         Time observation_time)
 {
+    ObservableId observable_id = instance_.nights_[night_id].observables.size();
+
     Observable observable;
     observable.target_id = target_id;
     observable.release_date = release_date;
     observable.meridian = meridian;
     observable.deadline = deadline;
     observable.observation_time = observation_time;
-    instance_.observables_[night_id].push_back(observable);
+    instance_.nights_[night_id].observables.push_back(observable);
+
+    if (instance_.nights_[night_id].start > release_date)
+        instance_.nights_[night_id].start = release_date;
+    if (instance_.nights_[night_id].end < deadline)
+        instance_.nights_[night_id].end = deadline;
+    instance_.targets_[target_id].observables.push_back({night_id, observable_id});
 }
 
 void InstanceBuilder::set_profit(
         TargetId target_id,
         Profit profit)
 {
-    instance_.profits_[target_id] = profit;
+    instance_.targets_[target_id].profit = profit;
 }
 
 void InstanceBuilder::read(
@@ -121,14 +129,14 @@ Instance InstanceBuilder::build()
     for (NightId night_id = 0;
             night_id < instance_.number_of_nights();
             ++night_id) {
-        instance_.number_of_observables_ += instance_.observables_[night_id].size();
+        instance_.number_of_observables_ += instance_.nights_[night_id].observables.size();
     }
 
     // Compute profit_sum_.
     for (TargetId target_id = 0;
             target_id < instance_.number_of_targets();
             ++target_id) {
-        instance_.profit_sum_ += instance_.profit(target_id);
+        instance_.profit_sum_ += instance_.target(target_id).profit;
     }
 
     return std::move(instance_);

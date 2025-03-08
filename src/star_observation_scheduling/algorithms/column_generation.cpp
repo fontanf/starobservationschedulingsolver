@@ -52,6 +52,7 @@ namespace
 
 using Column = columngenerationsolver::Column;
 using Value = columngenerationsolver::Value;
+using PricingOutput = columngenerationsolver::PricingSolver::PricingOutput;
 
 class PricingSolver: public columngenerationsolver::PricingSolver
 {
@@ -67,7 +68,7 @@ public:
     virtual std::vector<std::shared_ptr<const Column>> initialize_pricing(
             const std::vector<std::pair<std::shared_ptr<const Column>, Value>>& fixed_columns);
 
-    virtual std::vector<std::shared_ptr<const Column>> solve_pricing(
+    virtual PricingOutput solve_pricing(
             const std::vector<Value>& duals);
 
 private:
@@ -150,10 +151,12 @@ struct ColumnExtra
     std::vector<ObservableId> snsosp2sosp;
 };
 
-std::vector<std::shared_ptr<const Column>> PricingSolver::solve_pricing(
+PricingOutput PricingSolver::solve_pricing(
             const std::vector<Value>& duals)
 {
-    std::vector<std::shared_ptr<const Column>> columns;
+    PricingOutput output;
+    Value reduced_cost_bound = 0.0;
+
     for (NightId night_id = 0;
             night_id < instance_.number_of_nights();
             ++night_id) {
@@ -215,9 +218,15 @@ std::vector<std::shared_ptr<const Column>> PricingSolver::solve_pricing(
         // Extra.
         ColumnExtra extra {night_id, snsosp_output.solution, snsosp2sosp_};
         column.extra = std::shared_ptr<void>(new ColumnExtra(extra));
-        columns.push_back(std::shared_ptr<const Column>(new Column(column)));
+        output.columns.push_back(std::shared_ptr<const Column>(new Column(column)));
+
+        reduced_cost_bound = (std::max)(
+                reduced_cost_bound,
+                columngenerationsolver::compute_reduced_cost(column, duals));
     }
-    return columns;
+
+    output.overcost = instance_.number_of_nights() * std::max(0.0, reduced_cost_bound);
+    return output;
 }
 
 Solution columns2solution(
@@ -274,15 +283,18 @@ const ColumnGenerationGreedyOutput starobservationschedulingsolver::star_observa
     greedy_parameters.new_solution_callback = [&instance, &algorithm_formatter](
             const columngenerationsolver::Output& cgs_output)
     {
-        Profit bound = std::ceil(cgs_output.bound - FFOT_TOL);
-        algorithm_formatter.update_bound(bound, "");
-
         if (cgs_output.solution.feasible()) {
             Solution solution = columns2solution(instance, cgs_output.solution);
             algorithm_formatter.update_solution(solution, "");
         }
     };
-    greedy_parameters.column_generation_parameters.linear_programming_solver
+    greedy_parameters.new_bound_callback = [&instance, &algorithm_formatter](
+            const columngenerationsolver::Output& cgs_output)
+    {
+        Profit bound = std::ceil(cgs_output.bound - FFOT_TOL);
+        algorithm_formatter.update_bound(bound, "");
+    };
+    greedy_parameters.column_generation_parameters.solver_name
         = columngenerationsolver::s2lps(parameters.linear_programming_solver);
     auto greedy_output = columngenerationsolver::greedy(
             model,

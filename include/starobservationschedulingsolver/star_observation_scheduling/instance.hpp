@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <limits>
 
 namespace starobservationschedulingsolver
 {
@@ -37,6 +38,18 @@ using Profit = double;
 using Time = int64_t;
 using Counter = int64_t;
 using Seed = int64_t;
+
+/**
+ * Structure for a target.
+ */
+struct Target
+{
+    /** Profit of the target. */
+    Profit profit = 0;
+
+    /** Observables of the target. */
+    std::vector<std::pair<NightId, ObservableId>> observables;
+};
 
 /**
  * Structure for an observable.
@@ -59,6 +72,18 @@ struct Observable
     Time observation_time;
 };
 
+struct Night
+{
+    /** Observables of the night. */
+    std::vector<Observable> observables;
+
+    /** Start time. */
+    Time start = std::numeric_limits<Time>::max();
+
+    /** End time. */
+    Time end = std::numeric_limits<Time>::min();
+};
+
 /**
  * Instance class for a 'starobservationscheduling' problem.
  */
@@ -72,27 +97,27 @@ public:
      */
 
     /** Get the number of nights. */
-    NightId number_of_nights() const { return observables_.size(); }
+    NightId number_of_nights() const { return nights_.size(); }
+
+    /** Get a night. */
+    const Night& night(NightId night_id) const { return nights_[night_id]; }
 
     /** Get the number of targets. */
-    TargetId number_of_targets() const { return profits_.size(); }
+    TargetId number_of_targets() const { return targets_.size(); }
+
+    /** Get a target. */
+    const Target& target(TargetId target_id) const { return targets_[target_id]; }
 
     /** Get the total number of observables. */
     ObservableId number_of_observables() const { return number_of_observables_; }
-
-    /** Get the number of observable in a given night. */
-    ObservableId number_of_observables(NightId night_id) const { return observables_[night_id].size(); }
 
     /** Get an observble. */
     const Observable& observable(
             NightId night_id,
             ObservableId observable_id) const
     {
-        return observables_[night_id][observable_id];
+        return nights_[night_id].observables[observable_id];
     }
-
-    /** Get the profit of a target. */
-    Profit profit(TargetId target_id) const { return profits_[target_id]; }
 
     /** Get the total profit of the targets. */
     Profit total_profit() const { return profit_sum_; }
@@ -129,14 +154,14 @@ private:
      * Private attributes
      */
 
-    /** Observables. */
-    std::vector<std::vector<Observable>> observables_;
+    /** Nights. */
+    std::vector<Night> nights_;
 
     /** Number of observables. */
     ObservableId number_of_observables_ = 0;
 
-    /** Profits of the targets. */
-    std::vector<Profit> profits_;
+    /** Targets. */
+    std::vector<Target> targets_;
 
     /*
      * Computed attributes

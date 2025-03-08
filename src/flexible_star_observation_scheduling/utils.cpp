@@ -15,8 +15,9 @@ Instance starobservationschedulingsolver::flexible_star_observation_scheduling::
     for (NightId night_id = 0;
             night_id < sosp_instance.number_of_nights();
             ++night_id) {
+        const star_observation_scheduling::Night& night = sosp_instance.night(night_id);
         for (ObservableId sosp_observable_id = 0;
-                sosp_observable_id < sosp_instance.number_of_observables(night_id);
+                sosp_observable_id < (ObservableId)night.observables.size();
                 ++sosp_observable_id) {
             const auto& observable = sosp_instance.observable(night_id, sosp_observable_id);
             ObservableId observable_id = instance_builder.add_observable(
@@ -29,7 +30,7 @@ Instance starobservationschedulingsolver::flexible_star_observation_scheduling::
             // Add shorter observation time.
             for (double coef: coefs) {
                 Time reduced_observation_time = std::round(coef * observable.observation_time);
-                Profit reduced_profit = sosp_instance.profit(observable.target_id)
+                Profit reduced_profit = sosp_instance.target(observable.target_id).profit
                     * reduced_observation_time
                     / observable.observation_time;
                 instance_builder.add_observation_time(
@@ -44,7 +45,7 @@ Instance starobservationschedulingsolver::flexible_star_observation_scheduling::
                     night_id,
                     observable_id,
                     observable.observation_time,
-                    sosp_instance.profit(observable.target_id));
+                    sosp_instance.target(observable.target_id).profit);
         }
     }
 
@@ -62,8 +63,9 @@ Instance starobservationschedulingsolver::flexible_star_observation_scheduling::
     for (NightId night_id = 0;
             night_id < sosp_instance.number_of_nights();
             ++night_id) {
+        const star_observation_scheduling::Night& night = sosp_instance.night(night_id);
         for (ObservableId sosp_observable_id = 0;
-                sosp_observable_id < sosp_instance.number_of_observables(night_id);
+                sosp_observable_id < (ObservableId)night.observables.size();
                 ++sosp_observable_id) {
             const auto& observable = sosp_instance.observable(night_id, sosp_observable_id);
             ObservableId observable_id = instance_builder.add_observable(
@@ -78,7 +80,7 @@ Instance starobservationschedulingsolver::flexible_star_observation_scheduling::
             for (Time observation_time = observation_time_min;
                     observation_time <= observable.observation_time;
                     ++observation_time) {
-                Profit profit = sosp_instance.profit(observable.target_id)
+                Profit profit = sosp_instance.target(observable.target_id).profit
                     * observation_time
                     / observable.observation_time;
                 instance_builder.add_observation_time(

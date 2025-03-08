@@ -24,16 +24,20 @@ std::ostream& Instance::format(
         os << std::endl
             << std::setw(12) << "Target"
             << std::setw(12) << "Profit"
+            << std::setw(12) << "# Obs"
             << std::endl
             << std::setw(12) << "------"
             << std::setw(12) << "------"
+            << std::setw(12) << "-----"
             << std::endl;
         for (TargetId target_id = 0;
                 target_id < number_of_targets();
                 ++target_id) {
+            const Target& target = this->target(target_id);
             os
                 << std::setw(12) << target_id
-                << std::setw(12) << profit(target_id)
+                << std::setw(12) << target.profit
+                << std::setw(12) << target.observables.size()
                 << std::endl;
         }
     }
@@ -59,8 +63,9 @@ std::ostream& Instance::format(
         for (NightId night_id = 0;
                 night_id < number_of_nights();
                 ++night_id) {
+            const Night& night = this->night(night_id);
             for (ObservableId observable_id = 0;
-                    observable_id < number_of_observables(night_id);
+                    observable_id < (ObservableId)night.observables.size();
                     ++observable_id) {
                 const Observable& observable = this->observable(night_id, observable_id);
                 os
@@ -138,7 +143,7 @@ std::pair<bool, Profit> Instance::check(
             if (time < observable.release_date)
                 time = observable.release_date;
             time += observable.observation_time;
-            profit += this->profit(observable.target_id);
+            profit += this->target(observable.target_id).profit;
 
             if (verbosity_level >= 2) {
                 os

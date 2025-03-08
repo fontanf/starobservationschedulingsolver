@@ -43,7 +43,7 @@ void Solution::append_observation(
     night.current_time = start_time + observable.observation_time;
     targets_[observable.target_id] = 1;
     number_of_observations_++;
-    profit_ += instance().profit(observable.target_id);
+    profit_ += instance().target(observable.target_id).profit;
 }
 
 std::ostream& Solution::format(
